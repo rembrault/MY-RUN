@@ -6,14 +6,14 @@ import { generatePlan } from '../services/planGenerator';
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const initialUser: User = {
-    name: 'Rémy Brault',
-    email: 'rem.brault@gmail.com',
+    name: '', // Vide par défaut pour forcer la saisie
+    email: '',
     avatar: 'https://picsum.photos/200',
-    weight: 70,
-    height: 175,
-    birthDate: '1995-05-23',
-    level: Level.Intermediate,
-    vma: 15.5,
+    weight: 0,
+    height: 0,
+    birthDate: '',
+    level: Level.Beginner,
+    vma: 0,
 };
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -32,6 +32,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             }
         }
         return null;
+    });
+
+    const [hasOnboarded, setHasOnboarded] = useState<boolean>(() => {
+        const savedOnboarded = localStorage.getItem('myrun_hasOnboarded');
+        return savedOnboarded ? JSON.parse(savedOnboarded) : false;
     });
 
     const [programHistory, setProgramHistory] = useState<Program[]>(() => {
@@ -72,8 +77,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         localStorage.setItem('myrun_isPaid', JSON.stringify(isPaid));
     }, [isPaid]);
 
+    useEffect(() => {
+        localStorage.setItem('myrun_hasOnboarded', JSON.stringify(hasOnboarded));
+    }, [hasOnboarded]);
+
     const updateUser = (userData: Partial<User>) => {
         setUser(prevUser => ({ ...prevUser, ...userData }));
+    };
+
+    const completeOnboarding = () => {
+        setHasOnboarded(true);
+        setPage('welcome');
     };
 
     const createProgram = (settings: Omit<Program, 'id' | 'weeks' | 'totalWeeks'> & { vma?: number, raceInfo?: Program['raceInfo'] }) => {
@@ -111,6 +125,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         program,
         isPaid,
         page,
+        hasOnboarded,
         programHistory,
         viewedProgram,
         setPage,
@@ -120,6 +135,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         completePayment,
         updateProgram,
         setViewedProgram,
+        completeOnboarding,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

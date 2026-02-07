@@ -3,234 +3,234 @@ import { Program, Week, Session, Distance, Level, WorkoutBlock } from '../types'
 
 const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
-// --- Pace Calculation Helpers ---
-
-const getPaceFromVMA = (vma: number, percentage: number): string => {
+// --- Helpers de calcul d'allure ---
+const getPace = (vma: number, percentage: number): string => {
     if (!vma || vma <= 0) return 'N/A';
-    const speed = vma * (percentage / 100);
-    const paceInMinutes = 60 / speed;
-    const minutes = Math.floor(paceInMinutes);
-    const seconds = Math.round((paceInMinutes - minutes) * 60);
-    return `${minutes}'${seconds.toString().padStart(2, '0')}"`;
+    const speed = vma * (percentage / 100); // km/h
+    const paceDec = 60 / speed; // min/km
+    const min = Math.floor(paceDec);
+    const sec = Math.round((paceDec - min) * 60);
+    return `${min}'${sec.toString().padStart(2, '0')}"`;
 };
 
-const getPaceRange = (vma: number, minPercent: number, maxPercent: number): string => {
-    if (!vma || vma <= 0) return '';
-    const paceSlower = getPaceFromVMA(vma, minPercent);
-    const paceFaster = getPaceFromVMA(vma, maxPercent);
-    return `(Allure: ${paceFaster} - ${paceSlower} /km)`;
+const getPaceRange = (vma: number, minP: number, maxP: number): string => {
+    return `${getPace(vma, maxP)} - ${getPace(vma, minP)}/km`;
 };
 
+// --- GÉNÉRATEURS DE SÉANCES INTELLIGENTS ---
 
-// --- Detailed Session Generators ---
-
-const getHillSession = (week: number, level: Level, vma: number): WorkoutBlock[] => {
-    const warmup = { type: 'Échauffement' as const, duration: 20, details: 'Footing lent sur terrain plat.' };
-    const cooldown = { type: 'Retour au calme' as const, duration: 15, details: 'Footing très lent et étirements.'};
-    let core: WorkoutBlock;
-
-    const reps = 4 + week;
-    if (level === Level.Beginner) {
-        core = { type: 'Corps de séance' as const, details: `${reps}x 45 secondes en côte (pente 5-7%). Récupération en descendant.` };
-    } else if (level === Level.Intermediate) {
-        core = { type: 'Corps de séance' as const, details: `${reps}x 1 minute en côte (pente 5-7%). Récupération en descendant.` };
-    } else { // Advanced
-        core = { type: 'Corps de séance' as const, details: `${reps}x 90 secondes en côte (pente 5-7%). Récupération en descendant.` };
-    }
-    return [warmup, core, cooldown];
-};
-
-const getIntervalSession = (week: number, level: Level, vma: number): WorkoutBlock[] => {
-    const warmup = { type: 'Échauffement' as const, duration: 20, details: 'Footing lent + éducatifs (montées de genoux, talons-fesses).' };
-    const cooldown = { type: 'Retour au calme' as const, duration: 10, details: 'Footing très lent + étirements légers.'};
+const generateIntervalSession = (weekNum: number, level: Level, vma: number, distance: Distance, isRecovery: boolean): WorkoutBlock[] => {
+    const warmupDuration = isRecovery ? 15 : 20;
+    const warmup = { type: 'Échauffement' as const, duration: warmupDuration, details: `${warmupDuration}' Footing progressif + Gammes` };
+    const cooldown = { type: 'Retour au calme' as const, duration: 10, details: '10\' Retour au calme très souple' };
     
     let core: WorkoutBlock;
-    let recovery: WorkoutBlock;
+    let recoveryInfos: WorkoutBlock = { type: 'Info', details: 'Récupération active en trottinant.' };
 
-    if (level === Level.Beginner) {
-        const reps = 4 + Math.floor(week / 3);
-        core = { type: 'Corps de séance' as const, details: `${reps}x 400m ${getPaceRange(vma, 95, 100)}.` };
-        recovery = { type: 'Info' as const, details: `Récupération: 1'30" à 2'00" marchée entre chaque effort.` };
-    } else if (level === Level.Intermediate) {
-        const reps = 6 + Math.floor(week / 2);
-        core = { type: 'Corps de séance' as const, details: `${reps}x 500m ${getPaceRange(vma, 92, 98)}.` };
-        recovery = { type: 'Info' as const, details: `Récupération: 1'15" footing lent entre chaque effort.` };
-    } else { // Advanced
-        if (week % 2 === 0) {
-            const reps = 8 + Math.floor(week / 2);
-            core = { type: 'Corps de séance' as const, details: `${reps}x 400m ${getPaceRange(vma, 100, 105)}.` };
-            recovery = { type: 'Info' as const, details: `Récupération: 1'00" sur place entre chaque effort.` };
-        } else {
-            core = { type: 'Corps de séance' as const, details: `Pyramide: 200-400-600-800-600-400-200m ${getPaceRange(vma, 98, 102)}.` };
-            recovery = { type: 'Info' as const, details: `Récupération: moitié du temps d'effort en footing.` };
+    if (isRecovery) {
+        // Semaine d'assimilation : VMA allégée
+        core = { type: 'Corps de séance', details: `10x 30"/30" à 95% VMA. Restez fluide.` };
+        return [warmup, core, cooldown];
+    }
+
+    // Cycle de variation (1: Court, 2: Moyen/Pyramide, 3: Long/Spécifique, 0: Récup)
+    const cycleType = weekNum % 4; 
+
+    if (distance === Distance.TenK) {
+        if (cycleType === 1) { // VMA Courte
+            const sets = level === Level.Beginner ? '2x(6x 30"/30")' : '2x(10x 30"/30")';
+            core = { type: 'Corps de séance', details: `${sets} à 105% VMA. R=2' entre blocs.` };
+        } else if (cycleType === 2) { // VMA Moyenne / 400m
+             const reps = level === Level.Beginner ? 6 : level === Level.Advanced ? 10 : 8;
+             core = { type: 'Corps de séance', details: `${reps}x 400m en ${getPace(vma, 95)}. R=1'15.` };
+        } else { // Pyramide ou 1000m
+             core = { type: 'Corps de séance', details: `Pyramide: 200-400-600-400-200m. Vite ! R=temps d'effort.` };
+        }
+    } else {
+        // Semi et Marathon : Focus Seuil et Côtes
+        if (cycleType === 1) { // Côtes
+             const reps = level === Level.Beginner ? '6' : '10';
+             core = { type: 'Corps de séance', details: `${reps}x 45" vite en côte. Récup descente cool.` };
+        } else if (cycleType === 2) { // Seuil long
+             const reps = level === Level.Beginner ? 3 : 5;
+             core = { type: 'Corps de séance', details: `${reps}x 1000m à allure 10km. R=2'.` };
+        } else { // Pyramide inversée ou Fartlek
+             core = { type: 'Corps de séance', details: `Fartlek : 3'-2'-1'-3'-2'-1' rapide. R=1' trot.` };
         }
     }
 
-    return [warmup, core, recovery, cooldown];
+    return [warmup, core, recoveryInfos, cooldown];
 };
 
-const getTempoSession = (week: number, level: Level, vma: number): WorkoutBlock[] => {
-    const warmup = { type: 'Échauffement' as const, duration: 15, details: 'Footing très facile.' };
-    const cooldown = { type: 'Retour au calme' as const, duration: 10, details: 'Footing très lent.'};
+const generateTempoSession = (weekNum: number, level: Level, vma: number, distance: Distance, isRecovery: boolean): WorkoutBlock[] => {
+    // Allure cible
+    const pace = distance === Distance.Marathon ? getPaceRange(vma, 75, 80) : getPaceRange(vma, 80, 85);
+    
+    if (isRecovery) {
+         return [{ type: 'Corps de séance', duration: 40, details: `Footing en endurance fondamentale uniquement (${getPaceRange(vma, 65, 70)}).` }];
+    }
+
+    const warmup = { type: 'Échauffement' as const, duration: 15, details: '15\' Footing + 3 accélérations' };
+    const cooldown = { type: 'Retour au calme' as const, duration: 10, details: '10\' RAC' };
+
     let core: WorkoutBlock;
 
-    if (level === Level.Beginner) {
-        const tempoDuration = 15 + Math.floor(week / 2) * 5;
-        core = { type: 'Corps de séance' as const, duration: tempoDuration, details: `Allure semi-marathon ${getPaceRange(vma, 80, 85)}.` };
-    } else if (level === Level.Intermediate) {
-        const tempoBlocks = week < 5 ? `2x ${10 + week}min` : `3x ${10 + week - 5}min`;
-        core = { type: 'Corps de séance' as const, details: `${tempoBlocks} ${getPaceRange(vma, 82, 88)}, avec 3min de footing lent entre les blocs.` };
-    } else { // Advanced
-        const tempoDuration = 30 + week * 2;
-        core = { type: 'Corps de séance' as const, details: `Intégrer ${tempoDuration}min à allure marathon ${getPaceRange(vma, 75, 82)} dans votre sortie.` };
+    // Progression du volume d'allure
+    if (weekNum % 2 !== 0) {
+        // Blocs longs
+        const blocTime = Math.min(20, 10 + Math.floor(weekNum/2));
+        core = { type: 'Corps de séance', details: `2x ${blocTime}' allure spécifique cible (${pace}). R=2'.` };
+    } else {
+        // Continu
+        const duration = Math.min(40, 20 + weekNum);
+        core = { type: 'Corps de séance', details: `${duration}' allure spécifique cible (${pace}) d'une traite.` };
     }
+
     return [warmup, core, cooldown];
 };
 
-const getLongRunSession = (week: number, level: Level, totalWeeks: number, vma: number): WorkoutBlock[] => {
-    let duration = 0;
-    if (level === Level.Beginner) duration = 50 + week * 5;
-    if (level === Level.Intermediate) duration = 60 + week * 7;
-    if (level === Level.Advanced) duration = 75 + week * 8;
+const generateLongRun = (weekNum: number, level: Level, totalWeeks: number, vma: number, distance: Distance, isRecovery: boolean): WorkoutBlock[] => {
+    // Durée progressive
+    let baseMin = level === Level.Beginner ? 50 : 70;
+    if (isRecovery) baseMin -= 15;
     
-    // Tapering
-    if(week >= totalWeeks - 1) duration = Math.round(duration * 0.6);
-    if(week >= totalWeeks) duration = Math.round(duration * 0.4);
+    // Augmentation progressive : +5 min par cycle de charge, reset léger en récup
+    const increase = isRecovery ? 0 : (weekNum * 5);
+    let currentDuration = baseMin + increase;
 
-    const baseDetails = `Courir à allure très lente ${getPaceRange(vma, 65, 75)}. Ne vous souciez pas de la vitesse, juste de la durée.`;
-    
-    if (level === Level.Advanced && week > 3 && week < totalWeeks - 2) {
-        const marathonPaceDuration = 10 + week * 2;
-        return [
-            { type: 'Échauffement', duration: 20, details: `Footing lent ${getPaceRange(vma, 60, 70)}.` },
-            { type: 'Corps de séance', details: `2x ${marathonPaceDuration}min allure marathon ${getPaceRange(vma, 78, 83)} avec 5min de footing entre les blocs.` },
-            { type: 'Retour au calme', duration: 15, details: `Terminer le reste de la sortie en footing très lent.` }
-        ];
+    // Plafonds (1h30 pour 10k, 2h pour Semi, 3h pour Marathon)
+    const maxDuration = distance === Distance.Marathon ? 180 : distance === Distance.HalfMarathon ? 130 : 90;
+    currentDuration = Math.min(currentDuration, maxDuration);
+
+    const efPace = getPaceRange(vma, 65, 70);
+    const specificPace = distance === Distance.Marathon ? getPace(vma, 80) : getPace(vma, 85);
+
+    const blocks: WorkoutBlock[] = [];
+
+    // Intégration de blocs d'allure dans la sortie longue (1 semaine sur 2, sauf récup)
+    if (!isRecovery && weekNum % 2 === 0 && weekNum < totalWeeks - 1) {
+        const activeBlockTime = Math.min(40, weekNum * 3);
+        blocks.push({ type: 'Échauffement', duration: 20, details: `20' Endurance fondamentale (${efPace}).` });
+        blocks.push({ type: 'Corps de séance', details: `Corps de séance : ${activeBlockTime}' allure course (${specificPace}) inclus.` });
+        blocks.push({ type: 'Retour au calme', duration: currentDuration - 20 - activeBlockTime, details: 'Finir en endurance douce.' });
+    } else {
+        blocks.push({ type: 'Corps de séance', duration: currentDuration, details: `Sortie longue classique en aisance respiratoire (${efPace}).` });
     }
 
-    return [{ type: 'Corps de séance' as const, duration: Math.min(180, duration), details: baseDetails }];
-};
-
-const getEasyRunSession = (week: number, level: Level, vma: number): WorkoutBlock[] => {
-    let duration = 0;
-    if (level === Level.Beginner) duration = 30 + week;
-    if (level === Level.Intermediate) duration = 40 + week;
-    if (level === Level.Advanced) duration = 45 + week;
-    
-    return [{ type: 'Corps de séance' as const, duration, details: `Footing de récupération. ${getPaceRange(vma, 60, 70)}` }];
-};
-
-const createDetailedSession = (day: string, type: Session['type'], week: number, level: Level, totalWeeks: number, vma: number): Session => {
-    const sessionTitles = {
-        'Endurance': 'Endurance Fondamentale',
-        'Course à rythme': 'Séance de Seuil',
-        'Fractionné': 'Fractionné Court (VMA)',
-        'Sortie longue': 'Sortie Longue',
-        'Repos': 'Jour de Repos',
-        'Côtes': 'Séance de Côtes',
-    };
-
-    let structure: WorkoutBlock[] = [];
-    switch (type) {
-        case 'Fractionné':
-            structure = getIntervalSession(week, level, vma);
-            break;
-        case 'Course à rythme':
-            structure = getTempoSession(week, level, vma);
-            break;
-        case 'Sortie longue':
-            structure = getLongRunSession(week, level, totalWeeks, vma);
-            break;
-        case 'Endurance':
-            structure = getEasyRunSession(week, level, vma);
-            break;
-        case 'Repos':
-            structure = [{ type: 'Info', details: 'Le repos est crucial pour la récupération et la progression. Profitez-en !'}];
-            break;
-        case 'Côtes':
-            structure = getHillSession(week, level, vma);
-            break;
-    }
-    
-    const totalDuration = structure.reduce((sum, block) => sum + (block.duration || 0), 0);
-    // This is a very rough estimation, VMA paces make it more complex
-    const estimatedDistance = vma > 0 ? Math.round((totalDuration / 60) * (vma * 0.7)) : Math.round(totalDuration / 7);
-
-    return {
-        id: `${day}-${type}-${week}`,
-        day,
-        type,
-        title: sessionTitles[type],
-        structure,
-        duration: totalDuration > 0 ? totalDuration : undefined,
-        distance: estimatedDistance > 0 ? estimatedDistance : undefined,
-        completed: false,
-    };
+    return blocks;
 };
 
 export const generatePlan = (settings: Omit<Program, 'id' | 'weeks' | 'totalWeeks'> & { vma?: number, raceInfo?: Program['raceInfo'] }): Program => {
-    const { distance, level, sessionsPerWeek, raceDate, vma = 15, raceInfo } = settings;
+    const { distance, level, sessionsPerWeek, raceDate, vma = 14 } = settings;
 
     const today = new Date();
     const totalDays = Math.ceil((raceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    const totalWeeks = Math.max(8, Math.floor(totalDays / 7));
+    const totalWeeks = Math.max(4, Math.floor(totalDays / 7)); 
     
-    const elevationThresholds = {
-        [Distance.TenK]: 150,
-        [Distance.HalfMarathon]: 300,
-        [Distance.Marathon]: 500,
-    };
-
-    const isHillyRace = raceInfo && raceInfo.elevation > (elevationThresholds[distance] || 300);
-
     const weeks: Week[] = [];
+
+    // Jours d'entraînement
+    const trainingDays = sessionsPerWeek === 2 ? ['Mercredi', 'Dimanche'] 
+                       : sessionsPerWeek === 3 ? ['Mardi', 'Jeudi', 'Dimanche']
+                       : ['Mardi', 'Mercredi', 'Vendredi', 'Dimanche'];
 
     for (let i = 1; i <= totalWeeks; i++) {
         const sessions: Session[] = [];
         
-        const sessionTypes: Session['type'][] = ['Endurance', 'Course à rythme', 'Fractionné'];
-        const dayAssignments: string[] = [];
+        // Logique de Périodisation
+        // Semaine 4, 8, 12... sont des semaines de récupération (sauf si c'est la course)
+        const isTaper = i >= totalWeeks - 1;
+        const isRecovery = !isTaper && (i % 4 === 0);
 
-        if (sessionsPerWeek === 2) dayAssignments.push('Mardi', 'Samedi');
-        else if (sessionsPerWeek === 3) dayAssignments.push('Mardi', 'Jeudi', 'Dimanche');
-        else if (sessionsPerWeek === 4) dayAssignments.push('Mardi', 'Mercredi', 'Vendredi', 'Dimanche');
-        else if (sessionsPerWeek >= 5) dayAssignments.push('Mardi', 'Mercredi', 'Jeudi', 'Samedi', 'Dimanche');
+        trainingDays.forEach(day => {
+            let type: Session['type'] = 'Endurance';
+            let blocks: WorkoutBlock[] = [];
+            let title = "Footing";
 
-        let typeIndex = 0;
-        for (const day of dayAssignments) {
-            let sessionType: Session['type'];
-            if (day === 'Dimanche' && sessionsPerWeek > 1) {
-                sessionType = 'Sortie longue';
-            } else {
-                // Introduce hill sessions for hilly races in the middle of the plan
-                const isHillWeek = isHillyRace && i > 2 && i < totalWeeks - 2 && (i % 2 === 0);
-                if (isHillWeek && day === 'Jeudi' && sessionsPerWeek >=3) {
-                     sessionType = 'Côtes';
+            if (day === 'Dimanche') {
+                type = 'Sortie longue';
+                title = isRecovery ? "Sortie Longue Cool" : "La Sortie Longue";
+                if (isTaper) {
+                     blocks = [{ type: 'Corps de séance', duration: i === totalWeeks ? 30 : 50, details: "Footing léger. On fait du jus." }];
                 } else {
-                    sessionType = sessionTypes[typeIndex % sessionTypes.length];
-                    typeIndex++;
+                    blocks = generateLongRun(i, level, totalWeeks, vma, distance, isRecovery);
                 }
+            } 
+            else if (day === 'Mardi' || (sessionsPerWeek === 2 && day === 'Mercredi')) {
+                // Qualité (VMA / Côtes)
+                if (isTaper) {
+                     type = 'Course à rythme';
+                     title = "Rappel d'allure";
+                     blocks = [{type: 'Corps de séance', details: "20' footing + 1km allure course + 10' cool."}];
+                } else {
+                    type = 'Fractionné';
+                    title = "VMA & Intensité";
+                    blocks = generateIntervalSession(i, level, vma, distance, isRecovery);
+                }
+            } 
+            else if (day === 'Jeudi' || day === 'Mercredi') {
+                // Allure spécifique ou Endurance
+                if (sessionsPerWeek >= 3 && day === 'Jeudi') {
+                     type = 'Course à rythme';
+                     title = "Allure Spécifique";
+                     blocks = generateTempoSession(i, level, vma, distance, isRecovery);
+                } else {
+                     type = 'Endurance';
+                     title = "Footing";
+                     blocks = [{ type: 'Corps de séance', duration: 45, details: "45' en endurance fondamentale." }];
+                }
+            } 
+            else {
+                // Footing cool
+                type = 'Endurance';
+                title = "Footing de Récupération";
+                blocks = [{ type: 'Corps de séance', duration: 40, details: `Footing très cool (${getPaceRange(vma, 60, 65)}).` }];
             }
-            sessions.push(createDetailedSession(day, sessionType, i, level, totalWeeks, vma));
-        }
-        
-        const workoutDays = sessions.map(s => s.day);
-        for(const day of daysOfWeek) {
-            if (!workoutDays.includes(day)) {
-                sessions.push(createDetailedSession(day, 'Repos', i, level, totalWeeks, vma));
+
+            // Estimation distance/durée pour l'affichage
+            let totalMins = 0;
+            blocks.forEach(b => totalMins += b.duration || 20); // Fallback
+            const dist = Math.round((totalMins / 60) * (type === 'Fractionné' ? vma * 0.8 : vma * 0.7));
+
+            sessions.push({
+                id: `s-${i}-${day}`,
+                day,
+                type,
+                title,
+                structure: blocks,
+                completed: false,
+                duration: totalMins,
+                distance: dist
+            });
+        });
+
+        // Remplissage jours de repos
+        daysOfWeek.forEach(d => {
+            if (!trainingDays.includes(d)) {
+                sessions.push({
+                    id: `r-${i}-${d}`,
+                    day: d,
+                    type: 'Repos',
+                    title: 'Récupération',
+                    structure: [{ type: 'Info', details: 'Repos complet.' }],
+                    completed: false
+                });
             }
-        }
+        });
 
         sessions.sort((a, b) => daysOfWeek.indexOf(a.day) - daysOfWeek.indexOf(b.day));
-        
-        const totalKm = sessions.reduce((sum, s) => sum + (s.distance || 0), 0);
-        
+
+        // Nommage de la semaine
+        let weekTitle = `Cycle de Développement - Semaine ${i}`;
+        if (isRecovery) weekTitle = "Semaine d'Assimilation";
+        if (isTaper) weekTitle = "Affûtage (Jusqu'au jour J)";
+
         weeks.push({
             weekNumber: i,
-            title: i < 4 ? 'Introduction au volume' : i < totalWeeks - 1 ? 'Augmentation progressive' : 'Affûtage',
+            title: weekTitle,
             sessions,
-            totalKm: Math.round(totalKm),
-            sessionsCount: sessionsPerWeek,
+            totalKm: sessions.reduce((sum, s) => sum + (s.distance || 0), 0),
+            sessionsCount: sessionsPerWeek
         });
     }
 
@@ -238,7 +238,6 @@ export const generatePlan = (settings: Omit<Program, 'id' | 'weeks' | 'totalWeek
         id: new Date().toISOString(),
         ...settings,
         weeks,
-        totalWeeks,
+        totalWeeks
     };
 };
-    

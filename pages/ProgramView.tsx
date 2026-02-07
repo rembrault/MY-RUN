@@ -22,7 +22,7 @@ const ProgramView: React.FC = () => {
         return (
             <Layout>
                 <div className="text-center pt-20">
-                    <h2 className="text-2xl font-bold">Programme non trouvé</h2>
+                    <h2 className="text-2xl font-bold text-white">Programme non trouvé</h2>
                     <p className="text-gray-400 mt-2">Aucun programme n'a été sélectionné pour la visualisation.</p>
                     <button onClick={() => setPage('profile')} className="mt-6 bg-cyan-500 text-black font-bold py-3 px-6 rounded-full">
                         Retour au profil
@@ -60,7 +60,7 @@ const ProgramView: React.FC = () => {
                 <button onClick={handleBack} className="p-2 text-gray-400 hover:text-white">
                     <ArrowLeft size={24} />
                 </button>
-                <h1 className="text-xl font-bold text-center flex-1">{viewedProgram.raceName || "Détail du Programme"}</h1>
+                <h1 className="text-xl font-bold text-white text-center flex-1">{viewedProgram.raceName || "Détail du Programme"}</h1>
                 <div className="w-10"></div>
             </header>
 
@@ -74,7 +74,7 @@ const ProgramView: React.FC = () => {
             <div className="space-y-6">
                 {viewedProgram.weeks.map((week) => (
                     <div key={week.weekNumber} className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                        <h2 className="text-lg font-bold mb-3">Semaine {week.weekNumber}</h2>
+                        <h2 className="text-lg font-bold text-white mb-3">Semaine {week.weekNumber}</h2>
                         <div className="space-y-3">
                         {week.sessions.filter(s => s.type !== 'Repos').map(session => {
                              const visuals = sessionVisuals[session.type] || { icon: Zap, color: 'text-cyan-400', borderColor: 'border-cyan-500/50' };
@@ -85,7 +85,7 @@ const ProgramView: React.FC = () => {
                                         <div className="flex items-start gap-3">
                                             <Icon size={20} className={`mt-1 ${visuals.color}`} />
                                             <div>
-                                                <p className="font-bold">{session.day} - {session.title}</p>
+                                                <p className="font-bold text-white">{session.day} - {session.title}</p>
                                                 <p className="text-xs text-gray-400">{session.duration ? `~${session.duration}min` : ''} {session.distance ? `• ~${session.distance}km` : ''}</p>
                                             </div>
                                         </div>

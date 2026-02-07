@@ -13,14 +13,23 @@ import VMACalculator from './pages/VMACalculator';
 import ProgramView from './pages/ProgramView';
 
 const PageRenderer: React.FC = () => {
-    const { page, program } = useAppContext();
+    const { page, program, hasOnboarded } = useAppContext();
 
+    // 1. Onboarding Check : Si l'utilisateur n'a pas fini l'onboarding, on force la page profil
+    if (!hasOnboarded) {
+        return <EditProfile isOnboarding={true} />;
+    }
+
+    // 2. Si la page demandée est le questionnaire, on l'affiche TOUJOURS
+    if (page === 'new-program') {
+        return <Questionnaire />;
+    }
+
+    // 3. Si aucun programme n'existe, routing restreint
     if (!program) {
         switch (page) {
             case 'home':
                 return <Home />;
-            case 'new-program':
-                return <Questionnaire />;
             case 'profile':
                 return <Profile />;
             case 'edit-profile':
@@ -36,6 +45,7 @@ const PageRenderer: React.FC = () => {
         }
     }
     
+    // 4. Si un programme existe, routing complet
     switch (page) {
         case 'home':
             return <Home />;
@@ -51,8 +61,6 @@ const PageRenderer: React.FC = () => {
             return <VMACalculator />;
         case 'program-view':
             return <ProgramView />;
-        case 'new-program': // Redirect to home if a program exists
-             return <Home />;
         default:
             if (page.startsWith('week-')) {
                 const weekIndex = parseInt(page.split('-')[1], 10);

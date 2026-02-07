@@ -74,6 +74,7 @@ export interface AppContextType {
     program: Program | null;
     isPaid: boolean;
     page: Page;
+    hasOnboarded: boolean;
     programHistory: Program[];
     viewedProgram: Program | null;
     setPage: (page: Page) => void;
@@ -83,5 +84,5 @@ export interface AppContextType {
     completePayment: () => void;
     updateProgram: (updatedProgram: Program) => void;
     setViewedProgram: (program: Program | null) => void;
+    completeOnboarding: () => void;
 }
-    

@@ -10,8 +10,9 @@ const Profile: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     
     const confirmDelete = () => {
-        if (window.confirm('Voulez-vous supprimer ce programme ? Il sera archivé dans votre historique et ne sera plus votre programme actif.')) {
+        if (window.confirm("Attention : Cela supprimera définitivement votre programme actuel. Continuer ?")) {
             deleteProgram();
+            setPage('welcome');
         }
     };
     
@@ -57,9 +58,9 @@ const Profile: React.FC = () => {
                             <Camera size={16} />
                         </button>
                     </div>
-                    <h2 className="text-2xl font-bold mt-4">{user.name}</h2>
+                    <h2 className="text-2xl font-bold text-white mt-4">{user.name || 'Coureur Anonyme'}</h2>
                     <p className="text-gray-400 flex items-center gap-2">
-                        <Mail size={14} /> {user.email}
+                        {user.email && <><Mail size={14} /> {user.email}</>}
                     </p>
                 </div>
 
@@ -71,15 +72,19 @@ const Profile: React.FC = () => {
                 </div>
 
                 <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 mb-6">
-                    <h3 className="font-bold text-lg mb-4">Mon programme actif</h3>
+                    <h3 className="font-bold text-lg text-white mb-4">Mon programme actif</h3>
                     {program ? (
                         <div className="bg-black/20 p-4 rounded-lg flex justify-between items-center">
                             <div>
-                                <p className="font-bold">{program.raceName}</p>
+                                <p className="font-bold text-white">{program.raceName}</p>
                                 <p className="text-sm text-gray-400">{program.distance} • {program.totalWeeks} semaines</p>
                             </div>
-                            <button onClick={confirmDelete} className="text-red-500 p-2 hover:bg-red-500/10 rounded-full" title="Supprimer le programme">
-                                <Trash2 size={20} />
+                            <button 
+                                onClick={confirmDelete} 
+                                className="text-red-500 p-2 hover:bg-red-500/10 rounded-full cursor-pointer" 
+                                title="Supprimer le programme"
+                            >
+                                <Trash2 size={24} />
                             </button>
                         </div>
                     ) : (
@@ -93,13 +98,13 @@ const Profile: React.FC = () => {
                 </div>
 
                 <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10">
-                    <h3 className="font-bold text-lg mb-4">Historique des programmes</h3>
+                    <h3 className="font-bold text-lg text-white mb-4">Historique des programmes</h3>
                     {programHistory.length > 0 ? (
                         <div className="space-y-3">
                         {programHistory.map(p => (
                              <div key={p.id} className="bg-black/20 p-4 rounded-lg flex justify-between items-center">
                                 <div>
-                                    <p className="font-bold">{p.raceName}</p>
+                                    <p className="font-bold text-white">{p.raceName}</p>
                                     <p className="text-sm text-gray-400">{p.distance} • {new Date(p.raceDate).toLocaleDateString('fr-FR')}</p>
                                 </div>
                                 <button onClick={() => handleViewHistory(p)} className="text-cyan-400 p-2 hover:bg-cyan-500/10 rounded-full">
@@ -128,7 +133,7 @@ const Profile: React.FC = () => {
 const StatBox: React.FC<{ value: string; label: string; icon: React.ReactNode }> = ({ value, label, icon }) => (
     <div className="bg-white/5 backdrop-blur-sm p-4 rounded-xl border border-white/10 flex flex-col items-center justify-center">
         <div className="text-orange-400 mb-2">{icon}</div>
-        <p className="text-xl font-bold">{value}</p>
+        <p className="text-xl font-bold text-white">{value}</p>
         <p className="text-xs text-gray-400">{label}</p>
     </div>
 );

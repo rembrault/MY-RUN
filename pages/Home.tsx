@@ -4,7 +4,6 @@ import { Calendar, TrendingUp, Target, Trash2, Footprints, Lock, Plus } from 'lu
 import Layout from '../components/Layout';
 import { useAppContext } from '../context/AppContext';
 
-// Fix: Removed explicit React.FC type to resolve a type inference issue that caused cascading errors.
 const Home = () => {
     const { program, setPage, deleteProgram, isPaid, user } = useAppContext();
 
@@ -12,7 +11,7 @@ const Home = () => {
         return (
             <Layout>
                 <div className="text-center pt-20">
-                    <h2 className="text-2xl font-bold">Aucun programme actif</h2>
+                    <h2 className="text-2xl font-bold text-white">Aucun programme actif</h2>
                     <p className="text-gray-400 mt-2">Créez votre programme pour commencer.</p>
                     <button onClick={() => setPage('new-program')} className="mt-6 bg-green-500 text-black font-bold py-3 px-6 rounded-full">
                         Créer un programme
@@ -23,15 +22,20 @@ const Home = () => {
     }
     
     const confirmDelete = () => {
-        if (window.confirm('Voulez-vous supprimer ce programme ? Il sera archivé dans votre historique et ne sera plus votre programme actif.')) {
+        if (window.confirm('Voulez-vous vraiment supprimer ce programme ? Toutes les données seront effacées.')) {
             deleteProgram();
+            setPage('welcome');
         }
     };
     
     const handleGenerateNewProgram = () => {
-        if (window.confirm('Voulez-vous archiver votre programme actuel et en créer un nouveau ? Votre programme actuel sera sauvegardé dans votre historique.')) {
+        if (window.confirm('Voulez-vous archiver votre programme actuel et en créer un nouveau ?')) {
+            // 1. Delete current program
             deleteProgram();
-            setPage('new-program');
+            // 2. Schedule navigation to ensure state 'program' is null when PageRenderer evaluates
+            setTimeout(() => {
+                setPage('new-program');
+            }, 50);
         }
     };
 
@@ -73,8 +77,12 @@ const Home = () => {
                 <p className="text-gray-400 text-lg">Bonjour, {user.name}!</p>
                 <div className="flex justify-between items-center">
                     <h1 className="text-3xl font-bold text-white">{program.raceName || "Mon Programme"}</h1>
-                    <button onClick={confirmDelete} className="text-red-500 p-2 hover:bg-red-500/10 rounded-full" title="Supprimer le programme">
-                        <Trash2 size={20} />
+                    <button 
+                        onClick={confirmDelete} 
+                        className="text-red-500 p-2 hover:bg-red-500/10 rounded-full transition-colors cursor-pointer" 
+                        title="Supprimer le programme"
+                    >
+                        <Trash2 size={24} />
                     </button>
                 </div>
             </header>
@@ -88,13 +96,13 @@ const Home = () => {
 
             {upcomingSessions.length > 0 && (
                 <div className="bg-white/5 p-4 rounded-2xl border border-white/10 mb-8">
-                    <h2 className="text-xl font-bold mb-4">Prochaines Séances</h2>
+                    <h2 className="text-xl font-bold text-white mb-4">Prochaines Séances</h2>
                     <div className="space-y-3">
                         {upcomingSessions.map((session) => (
                              <div key={session.id} className={`bg-black/20 p-3 rounded-xl border-l-4 ${sessionColors[session.type] || 'border-gray-500'}`}>
                                  <p className="text-xs text-gray-400">Semaine {session.weekNumber} • {session.day}</p>
                                  <div className="flex justify-between items-center mt-1">
-                                    <h3 className="font-semibold text-md">{session.title}</h3>
+                                    <h3 className="font-semibold text-md text-white">{session.title}</h3>
                                     <span className={`text-xs font-semibold px-2 py-1 rounded-md ${sessionTagColors[session.type]}`}>{session.type === 'Course à rythme' ? 'Rythme' : session.type}</span>
                                  </div>
                              </div>
@@ -104,7 +112,7 @@ const Home = () => {
             )}
 
             <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                <h2 className="text-xl font-bold mb-4">Mon Programme</h2>
+                <h2 className="text-xl font-bold text-white mb-4">Mon Programme</h2>
                 <div className="space-y-3">
                     {program.weeks.map((week, index) => {
                         const isLocked = !isPaid && index > 0;
@@ -124,10 +132,10 @@ const Home = () => {
                             >
                                 <div>
                                     <div className="flex items-center gap-3">
-                                        <p className="font-bold text-lg">Semaine {week.weekNumber}</p>
+                                        <p className="font-bold text-lg text-white">Semaine {week.weekNumber}</p>
                                         {isFirstWeek && !isPaid && (
                                             <span className="bg-green-500/20 text-green-300 text-[10px] font-bold px-2 py-1 rounded-full">
-                                                SEMAINE GRATUITE
+                                                GRATUIT
                                             </span>
                                         )}
                                     </div>
@@ -135,7 +143,7 @@ const Home = () => {
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <div className="text-right">
-                                        <p className="font-semibold">{completedInWeek}/{week.sessionsCount}</p>
+                                        <p className="font-semibold text-white">{completedInWeek}/{week.sessionsCount}</p>
                                         <p className="text-xs text-gray-500">séances</p>
                                     </div>
                                     {isLocked && <Lock size={20} className="text-yellow-400" />}
