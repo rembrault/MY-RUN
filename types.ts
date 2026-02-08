@@ -18,6 +18,8 @@ export interface WorkoutBlock {
     details: string;
 }
 
+export type FeedbackType = 'easy' | 'medium' | 'hard';
+
 export interface Session {
     id: string;
     day: string; // Lundi, Mardi, etc.
@@ -27,6 +29,7 @@ export interface Session {
     distance?: number; // in km
     structure: WorkoutBlock[];
     completed: boolean;
+    feedback?: FeedbackType;
 }
 
 export interface Week {
@@ -85,4 +88,5 @@ export interface AppContextType {
     updateProgram: (updatedProgram: Program) => void;
     setViewedProgram: (program: Program | null) => void;
     completeOnboarding: () => void;
+    adaptProgramIntensity: (reductionPercentage: number) => void;
 }

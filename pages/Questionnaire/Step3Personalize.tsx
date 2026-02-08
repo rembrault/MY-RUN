@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Award, Calendar, Clock, Target, Footprints, ChevronUp, ChevronDown, Gauge, LoaderCircle, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Award, Calendar, Gauge, LoaderCircle, Search } from 'lucide-react';
 import { Distance, Page, Program } from '../../types';
 import { searchRaces, Race } from '../../services/raceFinder';
 
@@ -100,17 +100,17 @@ const Step3Personalize: React.FC<Step3Props> = ({ formData, onChange, onSelect, 
                         <Award className="text-orange-400" />
                     </div>
                     <div className="flex-1">
-                        <label className="text-xs text-gray-400">Nom de la course (optionnel)</label>
-                        <input type="text" placeholder="Rechercher une course..." value={formData.raceName} onChange={handleRaceNameChange} onFocus={() => setShowResults(true)} className="bg-transparent text-md font-semibold text-white focus:outline-none w-full"/>
+                        <label className="text-xs text-white font-semibold uppercase tracking-wide">Nom de la course (optionnel)</label>
+                        <input type="text" placeholder="Rechercher une course..." value={formData.raceName} onChange={handleRaceNameChange} onFocus={() => setShowResults(true)} className="bg-transparent text-md font-semibold text-white focus:outline-none w-full placeholder-gray-500 mt-1"/>
                     </div>
                     {isSearching ? <LoaderCircle size={20} className="animate-spin text-gray-400" /> : <Search size={20} className="text-gray-400"/>}
 
                     {showResults && (searchResults.length > 0 || isSearching) && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#1a1a20] border border-white/10 rounded-lg z-10 max-h-48 overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#1a1a20] border border-white/10 rounded-lg z-50 max-h-48 overflow-y-auto shadow-xl">
                             {isSearching && !searchResults.length && <p className="p-3 text-sm text-gray-400">Recherche...</p>}
                             {searchResults.map(race => (
-                                <div key={race.id} onClick={() => handleSelectRace(race)} className="p-3 hover:bg-white/10 cursor-pointer">
-                                    <p className="font-semibold">{race.name}</p>
+                                <div key={race.id} onClick={() => handleSelectRace(race)} className="p-3 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0">
+                                    <p className="font-semibold text-white">{race.name}</p>
                                     <p className="text-xs text-gray-400">{new Date(race.date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })} - {race.country}</p>
                                 </div>
                             ))}
@@ -123,14 +123,14 @@ const Step3Personalize: React.FC<Step3Props> = ({ formData, onChange, onSelect, 
                         <Calendar className="text-orange-400" />
                     </div>
                     <div className="flex-1">
-                        <label className="text-xs text-gray-400">Date de la course</label>
-                        <input type="date" min={today} value={formData.raceDate.toISOString().split('T')[0]} onChange={handleDateChange} className="bg-transparent text-md font-semibold text-white focus:outline-none w-full" style={{ colorScheme: 'dark' }} />
+                        <label className="text-xs text-white font-semibold uppercase tracking-wide">Date de la course</label>
+                        <input type="date" min={today} value={formData.raceDate.toISOString().split('T')[0]} onChange={handleDateChange} className="bg-transparent text-md font-semibold text-white focus:outline-none w-full mt-1" style={{ colorScheme: 'dark' }} />
                     </div>
                 </div>
                 
                 {/* Sessions per Week Card */}
                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                    <label className="text-sm text-gray-400">Séances par semaine : <span className="font-bold text-orange-400">{formData.sessionsPerWeek}x</span></label>
+                    <label className="text-sm text-white font-semibold block mb-2">Séances par semaine : <span className="font-bold text-orange-400 text-lg">{formData.sessionsPerWeek}x</span></label>
                     <div className="mt-3">
                         <input type="range" min="2" max="6" value={formData.sessionsPerWeek} onChange={(e) => onSelect('sessionsPerWeek', parseInt(e.target.value, 10))} className="w-full orange-slider" />
                     </div>
@@ -144,27 +144,29 @@ const Step3Personalize: React.FC<Step3Props> = ({ formData, onChange, onSelect, 
                                 <Gauge className="text-orange-400" />
                             </div>
                             <div>
-                                <label className="text-xs text-gray-400">Votre VMA (km/h)</label>
+                                <label className="text-xs text-white font-semibold uppercase tracking-wide block">Votre VMA (km/h)</label>
                                 <input 
                                     type="number" 
                                     step="0.1"
                                     value={formData.vma}
                                     onChange={(e) => onSelect('vma', parseFloat(e.target.value))}
-                                    className="bg-transparent text-md font-semibold text-white focus:outline-none w-24"
+                                    className="bg-transparent text-xl font-bold text-white focus:outline-none w-24 mt-1"
                                 />
                             </div>
                         </div>
-                        <button onClick={() => setPage('vma-calculator')} className="bg-orange-500/20 text-orange-300 text-xs font-bold px-3 py-2 rounded-lg hover:bg-orange-500/40 transition-colors">Calculer</button>
+                        <button onClick={() => setPage('vma-calculator')} className="bg-orange-500/20 text-orange-300 text-xs font-bold px-4 py-2 rounded-lg hover:bg-orange-500/40 transition-colors border border-orange-500/30">
+                            Calculer
+                        </button>
                     </div>
                 </div>
 
 
                 {/* Time Objective Card */}
                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                    <label className="text-sm text-gray-400 mb-3 block">Objectif de temps</label>
+                    <label className="text-sm text-white font-semibold mb-3 block">Objectif de temps</label>
                     <div className="grid grid-cols-3 gap-2">
                         {(timeObjectives[formData.distance] || []).map(obj => (
-                            <button key={obj} onClick={() => onSelect('timeObjective', obj)} className={`p-3 rounded-lg text-xs transition-colors ${formData.timeObjective === obj ? 'bg-orange-500 text-white font-bold' : 'bg-black/20 hover:bg-black/40'}`}>
+                            <button key={obj} onClick={() => onSelect('timeObjective', obj)} className={`p-3 rounded-lg text-xs font-bold transition-all ${formData.timeObjective === obj ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'bg-white/10 text-white hover:bg-white/20'}`}>
                                 {obj}
                             </button>
                         ))}
@@ -180,4 +182,3 @@ const Step3Personalize: React.FC<Step3Props> = ({ formData, onChange, onSelect, 
 };
 
 export default Step3Personalize;
-    

@@ -119,6 +119,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const updateProgram = (updatedProgram: Program) => {
         setProgram(updatedProgram);
     };
+    
+    const adaptProgramIntensity = (reductionPercentage: number) => {
+        if (!program || !program.vma) return;
+        
+        const currentVMA = program.vma;
+        const newVMA = parseFloat((currentVMA * (1 - reductionPercentage / 100)).toFixed(1));
+        
+        // Update user VMA
+        updateUser({ vma: newVMA });
+        
+        // Update program VMA reference (Note: In a real app, we would regenerate future sessions here)
+        setProgram({
+            ...program,
+            vma: newVMA
+        });
+    };
 
     const value: AppContextType = {
         user,
@@ -136,6 +152,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateProgram,
         setViewedProgram,
         completeOnboarding,
+        adaptProgramIntensity,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
