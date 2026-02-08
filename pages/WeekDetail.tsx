@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import Layout from '../components/Layout';
 import { Session, WorkoutBlock, FeedbackType } from '../types';
 import { downloadGarminFile } from '../services/garminService';
+import { downloadICS } from '../services/icsService';
 import NeonButton from '../components/NeonButton';
 
 const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -78,15 +79,7 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
     };
 
     const checkForAdaptation = () => {
-        // Aplatir toutes les sessions passées jusqu'à maintenant
         const allSessions = program.weeks.flatMap(w => w.sessions).filter(s => s.completed && s.type !== 'Repos');
-        // Prendre les 3 dernières
-        const last3 = allSessions.slice(-3); // Inclut celle qu'on vient de faire (car on a mis à jour le state localement mais pas encore le contexte global pour la lecture immédiate, mais ici on lit du contexte. Attention au refresh. 
-        // Simplification: On compte dans le contexte actuel + celle qu'on vient de valider.
-        
-        // Pour faire simple et fiable : on regarde si on a 3 "hard" consécutifs dans l'historique récent (en incluant potentiellement celle en cours si on rechargeait).
-        // Ici, `program` n'est pas encore mis à jour avec le dernier feedback dans cette closure.
-        // On va supposer que l'utilisateur a cliqué "Hard".
         
         let consecutiveHards = 1; // Celle actuelle
         for (let i = allSessions.length - 1; i >= 0; i--) {
@@ -127,14 +120,12 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
 
         if (draggedIndex === -1 || targetIndex === -1) return;
 
-        // Échange des jours pour garder la chronologie
         const draggedDay = sessions[draggedIndex].day;
         const targetDay = sessions[targetIndex].day;
 
         sessions[draggedIndex].day = targetDay;
         sessions[targetIndex].day = draggedDay;
 
-        // Re-trier par jour de la semaine
         sessions.sort((a, b) => daysOfWeek.indexOf(a.day) - daysOfWeek.indexOf(b.day));
 
         newProgram.weeks[weekIndex].sessions = sessions;
@@ -147,6 +138,10 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
         const sessionDate = new Date(today.getTime() + (weekIndex * 7 + dayIndex) * 24 * 60 * 60 * 1000);
         downloadGarminFile(session, sessionDate);
     };
+    
+    const handleExportICS = () => {
+        downloadICS(week, weekIndex);
+    };
 
     return (
         <Layout showBottomNav={false}>
@@ -155,6 +150,14 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
                     <ArrowLeft size={24} />
                 </button>
                 <h1 className="text-xl font-bold text-white">Semaine {week.weekNumber} / {program.totalWeeks}</h1>
+                
+                <button 
+                    onClick={handleExportICS}
+                    className="absolute right-0 top-0 p-2 text-cyan-400 hover:text-white bg-white/5 rounded-full border border-white/10"
+                    title="Ajouter au calendrier"
+                >
+                    <Calendar size={20} />
+                </button>
             </header>
 
             <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl mb-6 border border-white/10">
@@ -352,7 +355,10 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
                               {getBlockIcon(block.type)}
                               {block.type}
                           </p>
-                          {block.duration && <p className="text-xs text-gray-400 font-semibold">~ {block.duration} min</p>}
+                          <div className="flex items-center gap-2">
+                            {block.distance && <p className="text-xs text-gray-400 font-semibold">~ {block.distance.toFixed(1)} km</p>}
+                            {block.duration && <p className="text-xs text-gray-400 font-semibold">~ {block.duration} min</p>}
+                          </div>
                       </div>
                       <p className="text-sm text-gray-300 mt-1 ml-1">{block.details}</p>
                   </div>
@@ -362,7 +368,7 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
           <div className="pl-11 mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
             <p className="text-xs text-gray-500 font-semibold">EXPORTS</p>
             <div className="flex items-center gap-4">
-                <button onClick={() => alert("Fonctionnalité ICS à venir")} className="text-sm text-gray-400 font-semibold flex items-center gap-2 hover:text-white transition-colors">
+                <button onClick={() => alert("Utilisez le bouton calendrier en haut pour exporter la semaine complète.")} className="text-sm text-gray-400 font-semibold flex items-center gap-2 hover:text-white transition-colors">
                     <Calendar size={16} /> ICS
                 </button>
                 <button onClick={onExportGarmin} className="text-sm text-cyan-400 font-semibold flex items-center gap-2 hover:text-white transition-colors">

@@ -48,10 +48,10 @@ const Questionnaire: React.FC = () => {
     if (isCreating) {
         return (
             <div className="futuristic-grid min-h-screen w-full max-w-md mx-auto flex flex-col items-center justify-center">
-                <div className="bg-black/50 p-8 rounded-2xl text-center backdrop-blur-sm">
+                <div className="bg-black/80 p-8 rounded-2xl text-center backdrop-blur-sm border border-white/10">
                     <LoaderCircle className="mx-auto h-12 w-12 text-cyan-400 animate-spin mb-4" />
-                    <h2 className="text-2xl font-bold mb-2">Création de votre programme</h2>
-                    <p className="text-gray-400">Nous préparons votre plan sur mesure...</p>
+                    <h2 className="text-2xl font-bold mb-2 text-white">Création de votre programme</h2>
+                    <p className="text-gray-300">Nous préparons votre plan sur mesure...</p>
                 </div>
             </div>
         );
@@ -92,4 +92,3 @@ const Questionnaire: React.FC = () => {
 };
 
 export default Questionnaire;
-    

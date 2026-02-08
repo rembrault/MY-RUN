@@ -111,6 +111,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         localStorage.removeItem('myrun_isPaid');
     };
 
+    const clearHistory = () => {
+        setProgramHistory([]);
+        localStorage.removeItem('myrun_program_history');
+    };
+
     const completePayment = () => {
         setIsPaid(true);
         setPage('home');
@@ -148,6 +153,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateUser,
         createProgram,
         deleteProgram,
+        clearHistory,
         completePayment,
         updateProgram,
         setViewedProgram,

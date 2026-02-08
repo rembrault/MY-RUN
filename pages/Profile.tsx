@@ -1,18 +1,24 @@
 
 import React, { useRef } from 'react';
-import { Mail, Settings, Trophy, Target, Gauge, CheckCircle, Eye, Trash2, Camera } from 'lucide-react';
+import { Mail, Settings, Trophy, Target, Gauge, CheckCircle, Eye, Trash2, Camera, XCircle } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAppContext } from '../context/AppContext';
 import { Program } from '../types';
 
 const Profile: React.FC = () => {
-    const { user, program, deleteProgram, setPage, programHistory, setViewedProgram, updateUser } = useAppContext();
+    const { user, program, deleteProgram, setPage, programHistory, setViewedProgram, updateUser, clearHistory } = useAppContext();
     const fileInputRef = useRef<HTMLInputElement>(null);
     
     const confirmDelete = () => {
         if (window.confirm("Attention : Cela supprimera définitivement votre programme actuel. Continuer ?")) {
             deleteProgram();
             setPage('welcome');
+        }
+    };
+    
+    const confirmClearHistory = () => {
+        if (window.confirm("Êtes-vous sûr de vouloir effacer tout l'historique des programmes passés ?")) {
+            clearHistory();
         }
     };
     
@@ -43,7 +49,7 @@ const Profile: React.FC = () => {
 
     return (
         <Layout>
-            <div className="pt-8">
+            <div className="pt-8 pb-8">
                 <div className="flex flex-col items-center text-center">
                     <div className="relative">
                         <img src={user.avatar} alt="User Avatar" className="w-24 h-24 rounded-full border-4 border-cyan-500 object-cover" />
@@ -98,7 +104,15 @@ const Profile: React.FC = () => {
                 </div>
 
                 <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10">
-                    <h3 className="font-bold text-lg text-white mb-4">Historique des programmes</h3>
+                    <div className="flex justify-between items-center mb-4">
+                         <h3 className="font-bold text-lg text-white">Historique</h3>
+                         {programHistory.length > 0 && (
+                            <button onClick={confirmClearHistory} className="text-xs text-red-400 flex items-center gap-1 hover:text-red-300">
+                                <XCircle size={14} /> Effacer tout
+                            </button>
+                         )}
+                    </div>
+                   
                     {programHistory.length > 0 ? (
                         <div className="space-y-3">
                         {programHistory.map(p => (

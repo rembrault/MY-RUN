@@ -84,6 +84,7 @@ export interface AppContextType {
     updateUser: (userData: Partial<User>) => void;
     createProgram: (settings: Omit<Program, 'id' | 'weeks' | 'totalWeeks'> & { vma?: number, raceInfo?: Program['raceInfo'] }) => void;
     deleteProgram: () => void;
+    clearHistory: () => void;
     completePayment: () => void;
     updateProgram: (updatedProgram: Program) => void;
     setViewedProgram: (program: Program | null) => void;
