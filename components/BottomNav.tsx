@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, User, Gauge } from 'lucide-react';
+import { Home, User, Gauge, ScrollText } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Page } from '../types';
 
@@ -9,6 +9,7 @@ const BottomNav: React.FC = () => {
 
     const navItems = [
         { id: 'home', icon: Home, label: 'Accueil' },
+        { id: 'my-programs', icon: ScrollText, label: 'Progr.' },
         { id: 'vma-calculator', icon: Gauge, label: 'VMA' },
         { id: 'profile', icon: User, label: 'Profil' },
     ];
@@ -26,7 +27,12 @@ const BottomNav: React.FC = () => {
     return (
         <nav className="relative h-20 bg-transparent flex justify-around items-center z-20 flex-shrink-0 px-4">
             {navItems.map(item => {
-                const isActive = activePage === item.id || (program && item.id === 'home' && page === 'welcome');
+                // Active state logic: match exact page OR match home if welcome
+                // Also highlight 'my-programs' if we are in a detailed week view
+                const isActive = activePage === item.id || 
+                                 (program && item.id === 'home' && page === 'welcome') ||
+                                 (item.id === 'my-programs' && page.toString().startsWith('week-'));
+
                 return (
                     <button
                         key={item.id}

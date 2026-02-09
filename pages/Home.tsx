@@ -1,44 +1,39 @@
 
 import React from 'react';
-import { Calendar, TrendingUp, Target, Trash2, Footprints, Lock, Plus } from 'lucide-react';
+import { Calendar, TrendingUp, Target, ArrowRight, Play, Zap } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAppContext } from '../context/AppContext';
+import NeonButton from '../components/NeonButton';
 
 const Home = () => {
-    const { program, setPage, deleteProgram, isPaid, user } = useAppContext();
+    const { program, setPage, user } = useAppContext();
 
     if (!program) {
         return (
             <Layout>
-                <div className="text-center pt-20">
-                    <h2 className="text-2xl font-bold text-white">Aucun programme actif</h2>
-                    <p className="text-gray-400 mt-2">Créez votre programme pour commencer.</p>
-                    <button onClick={() => setPage('new-program')} className="mt-6 bg-green-500 text-black font-bold py-3 px-6 rounded-full">
-                        Créer un programme
-                    </button>
+                <div className="flex flex-col h-full pt-10">
+                    <header className="mb-8">
+                        <p className="text-gray-400 text-lg">Bonjour, {user.name}!</p>
+                        <h1 className="text-3xl font-bold text-white mt-1">Prêt à courir ?</h1>
+                    </header>
+
+                    <div className="flex-grow flex flex-col items-center justify-center text-center">
+                        <div className="bg-white/5 p-8 rounded-full mb-6 border border-white/10">
+                            <Zap size={48} className="text-cyan-400" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-white mb-2">Aucun programme actif</h2>
+                        <p className="text-gray-400 mb-8 max-w-xs">
+                            Créez votre programme personnalisé pour atteindre vos objectifs 10km, Semi ou Marathon.
+                        </p>
+                        <NeonButton onClick={() => setPage('new-program')} icon={<Play size={20} />}>
+                            Créer un programme
+                        </NeonButton>
+                    </div>
                 </div>
             </Layout>
         );
     }
     
-    const confirmDelete = () => {
-        if (window.confirm('Voulez-vous vraiment supprimer ce programme ? Toutes les données seront effacées.')) {
-            deleteProgram();
-            setPage('welcome');
-        }
-    };
-    
-    const handleGenerateNewProgram = () => {
-        if (window.confirm('Voulez-vous archiver votre programme actuel et en créer un nouveau ?')) {
-            // 1. Delete current program
-            deleteProgram();
-            // 2. Schedule navigation to ensure state 'program' is null when PageRenderer evaluates
-            setTimeout(() => {
-                setPage('new-program');
-            }, 50);
-        }
-    };
-
     const today = new Date();
     const raceDate = new Date(program.raceDate);
     const daysUntilRace = Math.max(0, Math.ceil((raceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
@@ -46,146 +41,104 @@ const Home = () => {
     const allSessions = program.weeks.flatMap(week => week.sessions.filter(s => s.type !== 'Repos'));
     const completedSessionsCount = allSessions.filter(s => s.completed).length;
     const totalProgress = allSessions.length > 0 ? Math.round((completedSessionsCount / allSessions.length) * 100) : 0;
-    const totalKm = program.weeks.reduce((acc, week) => acc + week.totalKm, 0);
 
-    const raceDateString = raceDate.toLocaleDateString('fr-FR', {
-      day: 'numeric', month: 'long', year: 'numeric'
-    });
+    // Find next session
+    let nextSession = null;
+    let nextSessionWeekIndex = 0;
     
-    const upcomingSessions = program.weeks
-      .flatMap(week => week.sessions.map(s => ({ ...s, weekNumber: week.weekNumber })))
-      .filter(s => s.type !== 'Repos' && !s.completed)
-      .slice(0, 3);
-      
-    const sessionColors: { [key: string]: string } = {
-        'Endurance': 'border-purple-500',
-        'Course à rythme': 'border-blue-500',
-        'Fractionné': 'border-red-500',
-        'Sortie longue': 'border-yellow-500'
-    };
-    
-    const sessionTagColors: { [key: string]: string } = {
-        'Endurance': 'bg-purple-500/20 text-purple-300',
-        'Course à rythme': 'bg-blue-500/20 text-blue-300',
-        'Fractionné': 'bg-red-500/20 text-red-300',
-        'Sortie longue': 'bg-yellow-500/20 text-yellow-300'
-    };
-    
+    for (let i = 0; i < program.weeks.length; i++) {
+        const session = program.weeks[i].sessions.find(s => s.type !== 'Repos' && !s.completed);
+        if (session) {
+            nextSession = session;
+            nextSessionWeekIndex = i;
+            break;
+        }
+    }
+
     return (
         <Layout>
-            <header className="mb-6">
+            <header className="mb-8">
                 <p className="text-gray-400 text-lg">Bonjour, {user.name}!</p>
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-white">{program.raceName || "Mon Programme"}</h1>
-                    <button 
-                        onClick={confirmDelete} 
-                        className="text-red-500 p-2 hover:bg-red-500/10 rounded-full transition-colors cursor-pointer" 
-                        title="Supprimer le programme"
-                    >
-                        <Trash2 size={24} />
-                    </button>
-                </div>
+                <h1 className="text-3xl font-bold text-white mt-1">Tableau de bord</h1>
             </header>
             
-            <div className="grid grid-cols-2 gap-4 mb-8">
-                <StatCard icon={<Calendar className="text-red-400" />} label="Jour J" value={`J-${daysUntilRace}`} subtitle={raceDateString} colorClasses="border-red-400/20 hover:border-red-400" />
-                <StatCard icon={<TrendingUp className="text-yellow-400" />} label="Progression" value={`${totalProgress}%`} subtitle={`${completedSessionsCount}/${allSessions.length} séances`} colorClasses="border-yellow-400/20 hover:border-yellow-400" />
-                <StatCard icon={<Footprints className="text-blue-400" />} label="Distance totale" value={`${Math.round(totalKm)} km`} subtitle={`sur ${program.totalWeeks} semaines`} colorClasses="border-blue-400/20 hover:border-blue-400" />
-                <StatCard icon={<Target className="text-green-400" />} label="Objectif" value={program.timeObjective} subtitle={program.distance} colorClasses="border-green-400/20 hover:border-green-400" />
-            </div>
+            <div className="space-y-6">
+                {/* ACTIVE PROGRAM CARD */}
+                <div 
+                    onClick={() => setPage('my-programs')}
+                    className="relative bg-gradient-to-br from-blue-900/40 to-black p-6 rounded-3xl border border-blue-500/30 cursor-pointer group transition-all hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
+                >
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <span className="bg-blue-500/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/20">
+                                EN COURS
+                            </span>
+                            <h2 className="text-2xl font-bold text-white mt-2">{program.raceName}</h2>
+                            <p className="text-sm text-gray-400">{program.distance} • Objectif {program.timeObjective}</p>
+                        </div>
+                        <div className="bg-white/10 p-3 rounded-full">
+                            <Target size={24} className="text-blue-400" />
+                        </div>
+                    </div>
 
-            {upcomingSessions.length > 0 && (
-                <div className="bg-white/5 p-4 rounded-2xl border border-white/10 mb-8">
-                    <h2 className="text-xl font-bold text-white mb-4">Prochaines Séances</h2>
-                    <div className="space-y-3">
-                        {upcomingSessions.map((session) => (
-                             <div key={session.id} className={`bg-black/20 p-3 rounded-xl border-l-4 ${sessionColors[session.type] || 'border-gray-500'}`}>
-                                 <p className="text-xs text-gray-400">Semaine {session.weekNumber} • {session.day}</p>
-                                 <div className="flex justify-between items-center mt-1">
-                                    <h3 className="font-semibold text-md text-white">{session.title}</h3>
-                                    <span className={`text-xs font-semibold px-2 py-1 rounded-md ${sessionTagColors[session.type]}`}>{session.type === 'Course à rythme' ? 'Rythme' : session.type}</span>
-                                 </div>
-                             </div>
-                        ))}
+                    <div className="mb-6">
+                        <div className="flex justify-between text-sm mb-2">
+                            <span className="text-gray-400">Progression</span>
+                            <span className="text-white font-bold">{totalProgress}%</span>
+                        </div>
+                        <div className="h-2 bg-black/50 rounded-full overflow-hidden">
+                            <div 
+                                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-1000" 
+                                style={{ width: `${totalProgress}%` }}
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-blue-200 group-hover:text-white transition-colors">
+                        Voir le détail <ArrowRight size={16} />
                     </div>
                 </div>
-            )}
 
-            <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                <h2 className="text-xl font-bold text-white mb-4">Mon Programme</h2>
-                <div className="space-y-3">
-                    {program.weeks.map((week, index) => {
-                        const isLocked = !isPaid && index > 0;
-                        const isFirstWeek = index === 0;
-                        const nonRestSessions = week.sessions.filter(s => s.type !== 'Repos');
-                        const completedInWeek = nonRestSessions.filter(s => s.completed).length;
-                        const isCompleted = nonRestSessions.length > 0 && completedInWeek === nonRestSessions.length;
-
-                        return (
-                            <div
-                                key={week.weekNumber}
-                                onClick={() => isLocked ? setPage('payment') : setPage(`week-${index}`)}
-                                className={`bg-black/20 p-4 rounded-xl border border-white/10 flex justify-between items-center transition-all duration-300 
-                                    ${isLocked ? 'opacity-60' : 'cursor-pointer hover:bg-white/20 hover:border-cyan-400/50'}
-                                    ${isCompleted ? '!border-green-500 neon-green-box' : ''}
-                                `}
-                            >
-                                <div>
-                                    <div className="flex items-center gap-3">
-                                        <p className="font-bold text-lg text-white">Semaine {week.weekNumber}</p>
-                                        {isFirstWeek && !isPaid && (
-                                            <span className="bg-green-500/20 text-green-300 text-[10px] font-bold px-2 py-1 rounded-full">
-                                                GRATUIT
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="text-sm text-gray-400 mt-1">{week.title}</p>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="text-right">
-                                        <p className="font-semibold text-white">{completedInWeek}/{week.sessionsCount}</p>
-                                        <p className="text-xs text-gray-500">séances</p>
-                                    </div>
-                                    {isLocked && <Lock size={20} className="text-yellow-400" />}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className="mt-8">
-                    <button 
-                        onClick={handleGenerateNewProgram}
-                        className="w-full bg-white/10 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
+                {/* NEXT SESSION CARD */}
+                {nextSession ? (
+                    <div 
+                        onClick={() => setPage(`week-${nextSessionWeekIndex}` as any)}
+                        className="bg-white/5 p-6 rounded-3xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
                     >
-                        <Plus size={18} />
-                        Générer un nouveau programme
-                    </button>
+                        <h3 className="text-gray-400 text-sm font-semibold uppercase tracking-wider mb-3">Prochaine séance</h3>
+                        <div className="flex items-center gap-4">
+                            <div className="bg-orange-500/20 p-4 rounded-2xl text-orange-400 border border-orange-500/20">
+                                <Play size={24} fill="currentColor" />
+                            </div>
+                            <div>
+                                <h4 className="text-xl font-bold text-white">{nextSession.title}</h4>
+                                <p className="text-sm text-gray-400">{nextSession.type} • {nextSession.duration} min</p>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="bg-green-500/10 p-6 rounded-3xl border border-green-500/20 text-center">
+                        <h3 className="text-green-400 font-bold text-lg">Programme terminé !</h3>
+                        <p className="text-gray-400 text-sm mt-1">Félicitations pour vos efforts.</p>
+                    </div>
+                )}
+
+                {/* STATS ROW */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10 flex flex-col items-center justify-center py-6">
+                        <Calendar size={24} className="text-purple-400 mb-2" />
+                        <p className="text-2xl font-bold text-white">J-{daysUntilRace}</p>
+                        <p className="text-xs text-gray-400">Avant la course</p>
+                    </div>
+                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10 flex flex-col items-center justify-center py-6">
+                        <TrendingUp size={24} className="text-yellow-400 mb-2" />
+                        <p className="text-2xl font-bold text-white">{program.vma}</p>
+                        <p className="text-xs text-gray-400">VMA (km/h)</p>
+                    </div>
                 </div>
             </div>
         </Layout>
     );
 };
-
-interface StatCardProps {
-    icon: React.ReactNode;
-    label: string;
-    value: string;
-    subtitle: string;
-    colorClasses: string;
-}
-
-const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle, colorClasses }) => (
-    <div className={`bg-gradient-to-br from-white/10 to-white/5 p-4 rounded-2xl border flex flex-col justify-between h-32 transition-all duration-300 hover:scale-105 ${colorClasses}`}>
-        <div>
-            <div className="flex items-center gap-2">
-                <div className="p-1 bg-black/20 rounded-md">{icon}</div>
-                <span className="text-sm font-semibold text-gray-400">{label}</span>
-            </div>
-        </div>
-        <p className="text-2xl font-bold text-white">{value}</p>
-        <p className="text-xs text-gray-500">{subtitle}</p>
-    </div>
-);
 
 export default Home;

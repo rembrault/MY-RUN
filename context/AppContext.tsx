@@ -94,7 +94,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const newProgram = generatePlan(settings);
         setProgram(newProgram);
         setIsPaid(false); // Reset payment status for new program
-        setPage('home');
+        setPage('my-programs'); // Redirect to Detailed Programs page
     };
 
     const deleteProgram = () => {

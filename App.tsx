@@ -11,6 +11,7 @@ import EditProfile from './pages/EditProfile';
 import CalendarExport from './pages/CalendarExport';
 import VMACalculator from './pages/VMACalculator';
 import ProgramView from './pages/ProgramView';
+import MyPrograms from './pages/MyPrograms';
 
 const PageRenderer: React.FC = () => {
     const { page, program, hasOnboarded } = useAppContext();
@@ -40,6 +41,8 @@ const PageRenderer: React.FC = () => {
                 return <VMACalculator />;
             case 'program-view':
                 return <ProgramView />;
+            case 'my-programs':
+                return <MyPrograms />;
             default:
                 return <Welcome />;
         }
@@ -49,6 +52,8 @@ const PageRenderer: React.FC = () => {
     switch (page) {
         case 'home':
             return <Home />;
+        case 'my-programs':
+            return <MyPrograms />;
         case 'profile':
             return <Profile />;
         case 'edit-profile':

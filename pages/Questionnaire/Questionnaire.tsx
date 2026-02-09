@@ -41,6 +41,7 @@ const Questionnaire: React.FC = () => {
         // Simulate network delay for a better UX
         setTimeout(() => {
             createProgram(formData);
+            setPage('my-programs'); // Ensure we go to the detailed view
             setIsCreating(false);
         }, 2000);
     };
@@ -51,7 +52,7 @@ const Questionnaire: React.FC = () => {
                 <div className="bg-black/80 p-8 rounded-2xl text-center backdrop-blur-sm border border-white/10">
                     <LoaderCircle className="mx-auto h-12 w-12 text-cyan-400 animate-spin mb-4" />
                     <h2 className="text-2xl font-bold mb-2 text-white">Création de votre programme</h2>
-                    <p className="text-gray-300">Nous préparons votre plan sur mesure...</p>
+                    <p className="text-white text-opacity-80">Nous préparons votre plan sur mesure...</p>
                 </div>
             </div>
         );

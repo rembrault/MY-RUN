@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { ArrowLeft, Scale, Ruler, Calendar, Activity, Gauge, User as UserIcon, Mail } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ArrowLeft, Scale, Ruler, Calendar, Activity, Gauge, User as UserIcon, Mail, Camera } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { User, Level } from '../types';
 import Layout from '../components/Layout';
@@ -13,6 +13,7 @@ interface EditProfileProps {
 const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
     const { user, updateUser, setPage, completeOnboarding } = useAppContext();
     const [formData, setFormData] = useState<User>(user);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -22,6 +23,23 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+    };
+
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (reader.result) {
+                    setFormData(prev => ({ ...prev, avatar: reader.result as string }));
+                }
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSave = () => {
@@ -52,6 +70,33 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
                 </h1>
                 {!isOnboarding && <div className="w-10"></div>}
             </header>
+
+            {/* Avatar Upload Section */}
+            <div className="flex flex-col items-center mb-8">
+                <div className="relative cursor-pointer group" onClick={handleAvatarClick}>
+                    <img 
+                        src={formData.avatar} 
+                        alt="Avatar" 
+                        className="w-28 h-28 rounded-full border-4 border-cyan-500 object-cover transition-transform group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera size={24} className="text-white" />
+                    </div>
+                    <div className="absolute bottom-0 right-0 bg-[#1a1a20] p-2 rounded-full text-cyan-400 border border-cyan-500/30 shadow-lg">
+                        <Camera size={16} />
+                    </div>
+                </div>
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    accept="image/*" 
+                    className="hidden" 
+                />
+                <p className="text-xs text-cyan-400 mt-3 font-medium cursor-pointer" onClick={handleAvatarClick}>
+                    Modifier la photo
+                </p>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">

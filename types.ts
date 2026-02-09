@@ -56,7 +56,8 @@ export interface Program {
         name: string;
         date: string;
         elevation: number;
-    }
+    };
+    image?: string;
 }
 
 export interface User {
@@ -70,7 +71,7 @@ export interface User {
     vma?: number;
 }
 
-export type Page = 'welcome' | 'new-program' | 'home' | 'profile' | 'edit-profile' | 'payment' | 'calendar' | 'vma-calculator' | `week-${number}` | 'program-view';
+export type Page = 'welcome' | 'new-program' | 'home' | 'my-programs' | 'profile' | 'edit-profile' | 'payment' | 'calendar' | 'vma-calculator' | `week-${number}` | 'program-view';
 
 export interface AppContextType {
     user: User;
