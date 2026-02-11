@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Calendar, TrendingUp, Target, ArrowRight, Play, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import { useAppContext } from '../context/AppContext';
 import NeonButton from '../components/NeonButton';
@@ -18,9 +19,14 @@ const Home = () => {
                     </header>
 
                     <div className="flex-grow flex flex-col items-center justify-center text-center">
-                        <div className="bg-white/5 p-8 rounded-full mb-6 border border-white/10">
+                        <motion.div 
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.2, type: "spring" }}
+                            className="bg-white/5 p-8 rounded-full mb-6 border border-white/10"
+                        >
                             <Zap size={48} className="text-cyan-400" />
-                        </div>
+                        </motion.div>
                         <h2 className="text-2xl font-bold text-white mb-2">Aucun programme actif</h2>
                         <p className="text-gray-400 mb-8 max-w-xs">
                             Créez votre programme personnalisé pour atteindre vos objectifs 10km, Semi ou Marathon.
@@ -55,6 +61,21 @@ const Home = () => {
         }
     }
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+    };
+
     return (
         <Layout>
             <header className="mb-8">
@@ -62,11 +83,18 @@ const Home = () => {
                 <h1 className="text-3xl font-bold text-white mt-1">Tableau de bord</h1>
             </header>
             
-            <div className="space-y-6">
+            <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-6"
+            >
                 {/* ACTIVE PROGRAM CARD */}
-                <div 
+                <motion.div 
+                    variants={itemVariants}
                     onClick={() => setPage('my-programs')}
-                    className="relative bg-gradient-to-br from-blue-900/40 to-black p-6 rounded-3xl border border-blue-500/30 cursor-pointer group transition-all hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
+                    whileTap={{ scale: 0.98 }}
+                    className="relative bg-gradient-to-br from-blue-900/40 to-black p-6 rounded-3xl border border-blue-500/30 cursor-pointer group transition-all hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
                 >
                     <div className="flex justify-between items-start mb-4">
                         <div>
@@ -87,21 +115,25 @@ const Home = () => {
                             <span className="text-white font-bold">{totalProgress}%</span>
                         </div>
                         <div className="h-2 bg-black/50 rounded-full overflow-hidden">
-                            <div 
-                                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-1000" 
-                                style={{ width: `${totalProgress}%` }}
-                            ></div>
+                            <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${totalProgress}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full" 
+                            />
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm text-blue-200 group-hover:text-white transition-colors">
                         Voir le détail <ArrowRight size={16} />
                     </div>
-                </div>
+                </motion.div>
 
                 {/* NEXT SESSION CARD */}
                 {nextSession ? (
-                    <div 
+                    <motion.div 
+                        variants={itemVariants}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => setPage(`week-${nextSessionWeekIndex}` as any)}
                         className="bg-white/5 p-6 rounded-3xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
                     >
@@ -115,16 +147,16 @@ const Home = () => {
                                 <p className="text-sm text-gray-400">{nextSession.type} • {nextSession.duration} min</p>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 ) : (
-                    <div className="bg-green-500/10 p-6 rounded-3xl border border-green-500/20 text-center">
+                    <motion.div variants={itemVariants} className="bg-green-500/10 p-6 rounded-3xl border border-green-500/20 text-center">
                         <h3 className="text-green-400 font-bold text-lg">Programme terminé !</h3>
                         <p className="text-gray-400 text-sm mt-1">Félicitations pour vos efforts.</p>
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* STATS ROW */}
-                <div className="grid grid-cols-2 gap-4">
+                <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
                     <div className="bg-white/5 p-4 rounded-2xl border border-white/10 flex flex-col items-center justify-center py-6">
                         <Calendar size={24} className="text-purple-400 mb-2" />
                         <p className="text-2xl font-bold text-white">J-{daysUntilRace}</p>
@@ -135,8 +167,8 @@ const Home = () => {
                         <p className="text-2xl font-bold text-white">{program.vma}</p>
                         <p className="text-xs text-gray-400">VMA (km/h)</p>
                     </div>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
         </Layout>
     );
 };

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MapPin, Clock, Info, Heart, Zap, Flame, Target, CheckCircle, Footprints, Calendar, GripVertical, Download, X, Smile, Meh, Frown, AlertTriangle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import Layout from '../components/Layout';
 import { Session, WorkoutBlock, FeedbackType } from '../types';
@@ -143,6 +144,22 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
         downloadICS(week, weekIndex);
     };
 
+    // --- ANIMATION VARIANTS ---
+    const listVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+    };
+
     return (
         <Layout showBottomNav={false}>
             <header className="text-center mb-6 relative">
@@ -160,7 +177,11 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
                 </button>
             </header>
 
-            <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl mb-6 border border-white/10">
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl mb-6 border border-white/10"
+            >
                 <div className="flex justify-between items-center">
                     <div>
                         <p className="text-sm text-gray-400">Semaine {week.weekNumber}</p>
@@ -175,36 +196,51 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
                    <span className="flex items-center gap-1"><MapPin size={14}/> {week.totalKm} km cette semaine</span>
                    <span className="flex items-center gap-1"><Clock size={14}/> {week.sessionsCount} séances</span>
                 </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-blue-900/40 p-4 rounded-2xl mb-6 flex items-start gap-3 border border-blue-500/30">
+            <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-blue-900/40 p-4 rounded-2xl mb-6 flex items-start gap-3 border border-blue-500/30"
+            >
                 <Info className="text-blue-400 h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div>
                     <h3 className="font-bold text-blue-300">Flexibilité</h3>
                     <p className="text-sm text-blue-200/80">Déplacez vos séances (même sur les jours de repos) avec la poignée <GripVertical className="inline w-3 h-3"/>.</p>
                 </div>
-            </div>
+            </motion.div>
 
-            <div className="space-y-4 pb-20">
+            <motion.div 
+                variants={listVariants}
+                initial="hidden"
+                animate="show"
+                className="space-y-4 pb-20"
+            >
                 {week.sessions.map((session) => (
-                    <SessionCard 
-                        key={session.id} 
-                        session={session} 
-                        onCheckClick={() => handleCheckClick(session)}
-                        onDragStart={(e) => handleDragStart(e, session.id)}
-                        onDrop={(e) => handleDrop(e, session.id)}
-                        onDragOver={(e) => { e.preventDefault(); setDragOverId(session.id); }}
-                        onDragLeave={() => setDragOverId(null)}
-                        isDragOver={dragOverId === session.id}
-                        onExportGarmin={() => handleExportGarmin(session)}
-                    />
+                    <motion.div key={session.id} variants={itemVariants}>
+                        <SessionCard 
+                            session={session} 
+                            onCheckClick={() => handleCheckClick(session)}
+                            onDragStart={(e) => handleDragStart(e, session.id)}
+                            onDrop={(e) => handleDrop(e, session.id)}
+                            onDragOver={(e) => { e.preventDefault(); setDragOverId(session.id); }}
+                            onDragLeave={() => setDragOverId(null)}
+                            isDragOver={dragOverId === session.id}
+                            onExportGarmin={() => handleExportGarmin(session)}
+                        />
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
 
             {/* FEEDBACK MODAL */}
             {feedbackSessionId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-[#1a1a20] w-full max-w-sm rounded-3xl p-6 border border-white/10 shadow-2xl">
+                    <motion.div 
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-[#1a1a20] w-full max-w-sm rounded-3xl p-6 border border-white/10 shadow-2xl"
+                    >
                         <div className="text-center mb-6">
                             <h3 className="text-2xl font-bold text-white mb-2">Séance terminée !</h3>
                             <p className="text-gray-400">Comment vous êtes-vous senti ?</p>
@@ -225,7 +261,7 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
                             </button>
                         </div>
                         <button onClick={() => setFeedbackSessionId(null)} className="w-full py-3 text-gray-500 text-sm font-semibold">Annuler</button>
-                    </div>
+                    </motion.div>
                 </div>
             )}
 
@@ -337,9 +373,13 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
               </div>
             </div>
             
-            <button onClick={onCheckClick} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 ${session.completed ? 'bg-green-500 border-green-500 scale-110' : 'border-gray-600 hover:border-white'}`}>
+            <motion.button 
+                whileTap={{ scale: 0.8 }}
+                onClick={onCheckClick} 
+                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 ${session.completed ? 'bg-green-500 border-green-500 scale-110' : 'border-gray-600 hover:border-white'}`}
+            >
                 {session.completed && <CheckCircle size={16} className="text-black" />}
-            </button>
+            </motion.button>
           </div>
 
           <div className={`flex items-center gap-4 text-gray-400 text-sm my-4 pl-20 ${session.completed ? 'line-through opacity-50' : ''}`}>
