@@ -1,12 +1,12 @@
 
 import React, { useRef } from 'react';
-import { Mail, Settings, Trophy, Target, Gauge, CheckCircle, Eye, Trash2, Camera, XCircle } from 'lucide-react';
+import { Mail, Settings, Trophy, Target, Gauge, CheckCircle, Eye, Trash2, Camera, XCircle, LogIn, LogOut } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAppContext } from '../context/AppContext';
 import { Program } from '../types';
 
 const Profile: React.FC = () => {
-    const { user, program, deleteProgram, setPage, programHistory, setViewedProgram, updateUser, clearHistory } = useAppContext();
+    const { user, program, deleteProgram, setPage, programHistory, setViewedProgram, updateUser, clearHistory, login, logout, isLoading, isAuthenticated } = useAppContext();
     const fileInputRef = useRef<HTMLInputElement>(null);
     
     const confirmDelete = () => {
@@ -47,6 +47,16 @@ const Profile: React.FC = () => {
     const completedSessions = program ? program.weeks.flatMap(w => w.sessions).filter(s => s.completed).length : 0;
     const totalPrograms = programHistory.length + (program ? 1 : 0);
 
+    if (isLoading) {
+        return (
+            <Layout>
+                <div className="flex justify-center items-center h-[60vh]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+                </div>
+            </Layout>
+        );
+    }
+
     return (
         <Layout>
             <div className="pt-8 pb-8">
@@ -65,9 +75,19 @@ const Profile: React.FC = () => {
                         </button>
                     </div>
                     <h2 className="text-2xl font-bold text-white mt-4">{user.name || 'Coureur Anonyme'}</h2>
-                    <p className="text-gray-400 flex items-center gap-2">
+                    <p className="text-gray-400 flex items-center gap-2 mb-4">
                         {user.email && <><Mail size={14} /> {user.email}</>}
                     </p>
+
+                    {!isAuthenticated ? (
+                        <button onClick={login} className="bg-white text-black font-bold py-2 px-6 rounded-full flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors mb-4">
+                            <LogIn size={18} /> Se connecter avec Google
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="text-green-400 text-xs border border-green-400/30 px-2 py-1 rounded-full bg-green-400/10">Compte synchronisé</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 my-8 text-center">
@@ -80,7 +100,7 @@ const Profile: React.FC = () => {
                 <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 mb-6">
                     <h3 className="font-bold text-lg text-white mb-4">Mon programme actif</h3>
                     {program ? (
-                        <div className="bg-black/20 p-4 rounded-lg flex justify-between items-center">
+                        <div className="bg-white/5 p-4 rounded-lg flex justify-between items-center">
                             <div>
                                 <p className="font-bold text-white">{program.raceName}</p>
                                 <p className="text-sm text-gray-400">{program.distance} • {program.totalWeeks} semaines</p>
@@ -116,7 +136,7 @@ const Profile: React.FC = () => {
                     {programHistory.length > 0 ? (
                         <div className="space-y-3">
                         {programHistory.map(p => (
-                             <div key={p.id} className="bg-black/20 p-4 rounded-lg flex justify-between items-center">
+                             <div key={p.id} className="bg-white/5 p-4 rounded-lg flex justify-between items-center">
                                 <div>
                                     <p className="font-bold text-white">{p.raceName}</p>
                                     <p className="text-sm text-gray-400">{p.distance} • {new Date(p.raceDate).toLocaleDateString('fr-FR')}</p>
@@ -134,10 +154,16 @@ const Profile: React.FC = () => {
                     )}
                 </div>
 
-                 <div className="text-center mt-8">
-                    <button onClick={() => setPage('edit-profile')} className="bg-cyan-500/20 text-cyan-300 font-bold py-3 px-6 rounded-full w-full flex items-center justify-center gap-2">
+                 <div className="text-center mt-8 space-y-4">
+                    <button onClick={() => setPage('edit-profile')} className="bg-cyan-900/50 border border-cyan-500/50 text-cyan-300 font-bold py-3 px-6 rounded-full w-full flex items-center justify-center gap-2 hover:bg-cyan-900/80 transition-colors">
                         <Settings size={18} /> Modifier les informations
                     </button>
+                    
+                    {isAuthenticated && (
+                        <button onClick={logout} className="text-red-400 text-sm flex items-center justify-center gap-2 mx-auto hover:text-red-300 py-2">
+                            <LogOut size={16} /> Se déconnecter
+                        </button>
+                    )}
                 </div>
             </div>
         </Layout>

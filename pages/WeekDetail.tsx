@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Clock, Info, Heart, Zap, Flame, Target, CheckCircle,
 import { motion } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import Layout from '../components/Layout';
-import { Session, WorkoutBlock, FeedbackType } from '../types';
+import { Session, WorkoutBlock, SessionFeedback } from '../types';
 import { downloadGarminFile } from '../services/garminService';
 import { downloadICS } from '../services/icsService';
 import NeonButton from '../components/NeonButton';
@@ -56,19 +56,19 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
         }
     };
 
-    const submitFeedback = (feedback: FeedbackType) => {
+    const submitFeedback = (feedback: SessionFeedback) => {
         if (feedbackSessionId) {
             toggleComplete(feedbackSessionId, true, feedback);
             setFeedbackSessionId(null);
             
             // Check Adaptation Logic : Si "Hard", vérifier les sessions précédentes
-            if (feedback === 'hard') {
+            if (feedback.sensation === 'hard') {
                 checkForAdaptation();
             }
         }
     };
 
-    const toggleComplete = (sessionId: string, status: boolean, feedback?: FeedbackType) => {
+    const toggleComplete = (sessionId: string, status: boolean, feedback?: SessionFeedback) => {
         const updatedProgram = { ...program };
         const session = updatedProgram.weeks[weekIndex].sessions.find(s => s.id === sessionId);
         if (session) {
@@ -84,7 +84,7 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
         
         let consecutiveHards = 1; // Celle actuelle
         for (let i = allSessions.length - 1; i >= 0; i--) {
-            if (allSessions[i].feedback === 'hard') {
+            if (allSessions[i].feedback?.sensation === 'hard') {
                 consecutiveHards++;
             } else {
                 break;
@@ -239,28 +239,87 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
                     <motion.div 
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-[#1a1a20] w-full max-w-sm rounded-3xl p-6 border border-white/10 shadow-2xl"
+                        className="bg-[#1a1a20] w-full max-w-sm rounded-3xl p-6 border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto"
                     >
                         <div className="text-center mb-6">
                             <h3 className="text-2xl font-bold text-white mb-2">Séance terminée !</h3>
-                            <p className="text-gray-400">Comment vous êtes-vous senti ?</p>
+                            <p className="text-gray-400">Dites-nous tout sur votre séance.</p>
                         </div>
                         
-                        <div className="grid grid-cols-3 gap-3 mb-6">
-                            <button onClick={() => submitFeedback('easy')} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-green-500/10 border border-green-500/30 hover:bg-green-500/20 transition-colors">
-                                <Smile size={32} className="text-green-400" />
-                                <span className="text-xs font-bold text-green-400">Facile</span>
-                            </button>
-                            <button onClick={() => submitFeedback('medium')} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors">
-                                <Meh size={32} className="text-yellow-400" />
-                                <span className="text-xs font-bold text-yellow-400">Moyen</span>
-                            </button>
-                            <button onClick={() => submitFeedback('hard')} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-colors">
-                                <Frown size={32} className="text-red-400" />
-                                <span className="text-xs font-bold text-red-400">Dur</span>
-                            </button>
-                        </div>
-                        <button onClick={() => setFeedbackSessionId(null)} className="w-full py-3 text-gray-500 text-sm font-semibold">Annuler</button>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const formData = new FormData(e.currentTarget);
+                            const feedback: SessionFeedback = {
+                                sensation: formData.get('sensation') as 'easy' | 'medium' | 'hard',
+                                duration: formData.get('duration') as string,
+                                distance: parseFloat(formData.get('distance') as string),
+                                elevation: parseFloat(formData.get('elevation') as string),
+                                avgHeartRate: parseFloat(formData.get('avgHeartRate') as string),
+                                comment: formData.get('comment') as string,
+                            };
+                            submitFeedback(feedback);
+                        }}>
+                            <div className="space-y-4 mb-6">
+                                {/* Sensation */}
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-2">Sensation</label>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <label className="cursor-pointer">
+                                            <input type="radio" name="sensation" value="easy" className="peer sr-only" defaultChecked />
+                                            <div className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/5 border border-white/10 peer-checked:bg-green-500/20 peer-checked:border-green-500/50 transition-all">
+                                                <Smile size={24} className="text-green-400" />
+                                                <span className="text-xs font-bold text-gray-300 peer-checked:text-green-400">Facile</span>
+                                            </div>
+                                        </label>
+                                        <label className="cursor-pointer">
+                                            <input type="radio" name="sensation" value="medium" className="peer sr-only" />
+                                            <div className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/5 border border-white/10 peer-checked:bg-yellow-500/20 peer-checked:border-yellow-500/50 transition-all">
+                                                <Meh size={24} className="text-yellow-400" />
+                                                <span className="text-xs font-bold text-gray-300 peer-checked:text-yellow-400">Moyen</span>
+                                            </div>
+                                        </label>
+                                        <label className="cursor-pointer">
+                                            <input type="radio" name="sensation" value="hard" className="peer sr-only" />
+                                            <div className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/5 border border-white/10 peer-checked:bg-red-500/20 peer-checked:border-red-500/50 transition-all">
+                                                <Frown size={24} className="text-red-400" />
+                                                <span className="text-xs font-bold text-gray-300 peer-checked:text-red-400">Dur</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Données chiffrées */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Durée (mm:ss)</label>
+                                        <input name="duration" type="text" placeholder="45:00" className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-cyan-400 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Distance (km)</label>
+                                        <input name="distance" type="number" step="0.01" placeholder="5.0" className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-cyan-400 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Dénivelé (m)</label>
+                                        <input name="elevation" type="number" placeholder="50" className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-cyan-400 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">FC Moy (bpm)</label>
+                                        <input name="avgHeartRate" type="number" placeholder="145" className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-cyan-400 outline-none" />
+                                    </div>
+                                </div>
+
+                                {/* Commentaire */}
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-1">Commentaire (optionnel)</label>
+                                    <textarea name="comment" rows={3} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-cyan-400 outline-none text-sm" placeholder="Sensations, douleurs, météo..."></textarea>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button type="button" onClick={() => setFeedbackSessionId(null)} className="flex-1 py-3 text-gray-400 font-semibold hover:text-white transition-colors">Annuler</button>
+                                <NeonButton type="submit" className="flex-1">Valider</NeonButton>
+                            </div>
+                        </form>
                     </motion.div>
                 </div>
             )}
@@ -322,19 +381,19 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
         return (
             <div {...commonProps} >
                 {/* Drag Handle */}
-                <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-600 cursor-grab active:cursor-grabbing hover:text-white">
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 cursor-grab active:cursor-grabbing hover:text-white">
                     <GripVertical size={20} />
                 </div>
                 <div className="flex justify-between items-center pl-8">
                     <div className="flex items-center gap-4 opacity-50">
-                        <div className="p-3 bg-black/20 rounded-full text-gray-500"><Heart size={20} /></div>
+                        <div className="p-3 bg-black/20 rounded-full text-gray-400"><Heart size={20} /></div>
                         <div>
                             <p className="text-sm text-gray-400">{session.day}</p>
                             <h3 className="font-bold text-lg text-white">Repos</h3>
                         </div>
                     </div>
                     {/* Zone de drop visuelle pour le repos */}
-                    <div className="text-xs text-gray-600 font-mono uppercase tracking-widest">
+                    <div className="text-xs text-gray-400 font-mono uppercase tracking-widest">
                         Zone de repos
                     </div>
                 </div>
@@ -348,7 +407,7 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
     return (
         <div {...commonProps} className={`${commonProps.className} ${session.completed ? 'opacity-70 grayscale-[0.5]' : ''}`}>
            {/* Drag Handle */}
-           <div className="absolute left-2 top-6 text-gray-500 hover:text-white cursor-grab active:cursor-grabbing">
+           <div className="absolute left-2 top-6 text-gray-400 hover:text-white cursor-grab active:cursor-grabbing">
                 <GripVertical size={20} />
             </div>
 
@@ -364,10 +423,10 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
                 {/* Feedback Badge */}
                 {session.completed && session.feedback && (
                     <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 uppercase tracking-wide
-                        ${session.feedback === 'easy' ? 'bg-green-500/20 text-green-300' : 
-                          session.feedback === 'medium' ? 'bg-yellow-500/20 text-yellow-300' : 
+                        ${session.feedback.sensation === 'easy' ? 'bg-green-500/20 text-green-300' : 
+                          session.feedback.sensation === 'medium' ? 'bg-yellow-500/20 text-yellow-300' : 
                           'bg-red-500/20 text-red-300'}`}>
-                        {session.feedback === 'easy' ? 'Facile' : session.feedback === 'medium' ? 'Moyen' : 'Difficile'}
+                        {session.feedback.sensation === 'easy' ? 'Facile' : session.feedback.sensation === 'medium' ? 'Moyen' : 'Difficile'}
                     </div>
                 )}
               </div>
@@ -376,15 +435,15 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
             <motion.button 
                 whileTap={{ scale: 0.8 }}
                 onClick={onCheckClick} 
-                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 ${session.completed ? 'bg-green-500 border-green-500 scale-110' : 'border-gray-600 hover:border-white'}`}
+                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 ${session.completed ? 'bg-green-500 border-green-500 scale-110' : 'border-gray-400 hover:border-white'}`}
             >
                 {session.completed && <CheckCircle size={16} className="text-black" />}
             </motion.button>
           </div>
 
           <div className={`flex items-center gap-4 text-gray-400 text-sm my-4 pl-20 ${session.completed ? 'line-through opacity-50' : ''}`}>
-             {session.duration && <span className="flex items-center gap-1 text-white"><Clock size={14} className="text-gray-500"/> ~{session.duration} min</span>}
-             {session.distance && <span className="flex items-center gap-1 text-white"><MapPin size={14} className="text-gray-500"/> ~{session.distance} km</span>}
+             {session.duration && <span className="flex items-center gap-1 text-white"><Clock size={14} className="text-gray-400"/> ~{session.duration} min</span>}
+             {session.distance && <span className="flex items-center gap-1 text-white"><MapPin size={14} className="text-gray-400"/> ~{session.distance} km</span>}
           </div>
           
           <div className="pl-8 ml-3 space-y-3">
@@ -406,7 +465,7 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
           </div>
 
           <div className="pl-11 mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-            <p className="text-xs text-gray-500 font-semibold">EXPORTS</p>
+            <p className="text-xs text-gray-400 font-semibold">EXPORTS</p>
             <div className="flex items-center gap-4">
                 <button onClick={() => alert("Utilisez le bouton calendrier en haut pour exporter la semaine complète.")} className="text-sm text-gray-400 font-semibold flex items-center gap-2 hover:text-white transition-colors">
                     <Calendar size={16} /> ICS

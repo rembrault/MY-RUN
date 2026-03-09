@@ -13,10 +13,12 @@ const Questionnaire: React.FC = () => {
     const [isCreating, setIsCreating] = useState(false);
     
     const [formData, setFormData] = useState({
-        distance: Distance.TenK,
+        distance: Distance.FiveK,
         level: Level.Beginner,
         raceName: '',
         raceDate: new Date(),
+        startDate: new Date(),
+        trainingDays: [] as string[],
         sessionsPerWeek: 3,
         timeObjective: 'Finir',
         currentMileage: 20,

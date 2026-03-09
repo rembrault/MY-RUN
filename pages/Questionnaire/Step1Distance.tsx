@@ -11,6 +11,14 @@ interface Step1Props {
 
 const distances = [
     { 
+        value: Distance.FiveK, 
+        label: '5 KM', 
+        description: 'Vitesse & Explosivité.',
+        icon: Zap,
+        color: 'text-purple-400',
+        borderColor: 'border-purple-500/50'
+    },
+    { 
         value: Distance.TenK, 
         label: '10 KM', 
         description: 'Vitesse & Intensité.',

@@ -29,36 +29,28 @@ METHOD:PUBLISH
     week.sessions.forEach(session => {
         if (session.type === 'Repos') return;
 
-        // Calculate event date
-        const dayIndex = daysOfWeek.indexOf(session.day); // 0=Sun, 1=Mon...
-        // But our daysOfWeek array in planGenerator is ['Lundi', ... 'Dimanche'].
-        // Let's rely on standard JS getDay() where 0 is Sunday.
-        
-        // Let's use a mapping based on French day names to JS day index (0-6)
-        const frDayToJs: {[key: string]: number} = {
-            'Dimanche': 0, 'Lundi': 1, 'Mardi': 2, 'Mercredi': 3, 'Jeudi': 4, 'Vendredi': 5, 'Samedi': 6
-        };
-        
-        const targetDayIndex = frDayToJs[session.day];
-        
-        // Calculate date: Start of plan (Today) + Week Offset + Day Offset
-        // Current logic in WeekDetail assumes Plan Start = Today.
-        // We need to find the specific date for this session in this week.
-        
-        const currentDayIndex = now.getDay(); // 0-6
-        // If we assume Week 0 starts today, then:
-        // SessionDate = Today + (WeekIndex * 7) + (TargetDay - CurrentDay) ? 
-        // No, usually "Week 1" means "This coming week".
-        // Let's stick to the exact logic used for Garmin export to match user expectation:
-        // date = today + (weekIndex * 7 + indexInArray) ... wait, WeekDetail Garmin logic uses `daysOfWeek.indexOf(session.day)`.
-        // Let's improve it. We want the event to be on the correct upcoming day.
-        
-        const dayOffset = (targetDayIndex - currentDayIndex + 7) % 7; 
-        // This finds the next occurrence of that day.
-        // Plus the week offset.
-        
-        const sessionDate = new Date();
-        sessionDate.setDate(now.getDate() + (weekIndex * 7) + dayOffset);
+        let sessionDate: Date;
+
+        if (session.date) {
+            sessionDate = new Date(session.date);
+        } else {
+            // Fallback logic for old programs without specific dates
+            const dayIndex = daysOfWeek.indexOf(session.day); // 0=Sun, 1=Mon...
+            
+            // French day mapping
+            const frDayToJs: {[key: string]: number} = {
+                'Dimanche': 0, 'Lundi': 1, 'Mardi': 2, 'Mercredi': 3, 'Jeudi': 4, 'Vendredi': 5, 'Samedi': 6
+            };
+            
+            const targetDayIndex = frDayToJs[session.day] ?? 0;
+            const currentDayIndex = now.getDay(); // 0-6
+            
+            const dayOffset = (targetDayIndex - currentDayIndex + 7) % 7; 
+            
+            sessionDate = new Date();
+            sessionDate.setDate(now.getDate() + (weekIndex * 7) + dayOffset);
+        }
+
         sessionDate.setHours(18, 0, 0, 0); // Default to 6 PM run
 
         const endDate = new Date(sessionDate);

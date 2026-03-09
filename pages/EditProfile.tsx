@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Scale, Ruler, Calendar, Activity, Gauge, User as UserIcon, Mail, Camera } from 'lucide-react';
+import { ArrowLeft, Scale, Ruler, Calendar, Activity, Gauge, User as UserIcon, Mail, Camera, Minus, Plus } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { User, Level } from '../types';
 import Layout from '../components/Layout';
@@ -23,6 +23,14 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+    };
+
+    const increment = (field: keyof User, step: number = 1) => {
+        setFormData(prev => ({ ...prev, [field]: parseFloat(((Number(prev[field]) || 0) + step).toFixed(1)) }));
+    };
+
+    const decrement = (field: keyof User, step: number = 1) => {
+        setFormData(prev => ({ ...prev, [field]: Math.max(0, parseFloat(((Number(prev[field]) || 0) - step).toFixed(1))) }));
     };
 
     const handleAvatarClick = () => {
@@ -101,29 +109,53 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
             <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                     <InputCard icon={<UserIcon size={18} className="text-cyan-400" />} label="Prénom">
-                        <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Votre prénom" className="w-full bg-black/20 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium" />
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Votre prénom" className="w-full bg-white/5 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium" />
                     </InputCard>
                 </div>
                 
-                <InputCard icon={<Scale size={18} className="text-red-400" />} label="Poids (kg)">
-                    <input type="number" name="weight" value={formData.weight || ''} onChange={handleNumberChange} className="w-full bg-black/20 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium" />
+                <InputCard icon={<Scale size={18} className="text-white" />} label="Poids (kg)">
+                    <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => decrement('weight')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                            <Minus size={14} />
+                        </button>
+                        <input type="number" name="weight" value={formData.weight || ''} onChange={handleNumberChange} className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                        <button type="button" onClick={() => increment('weight')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                            <Plus size={14} />
+                        </button>
+                    </div>
                 </InputCard>
 
-                <InputCard icon={<Ruler size={18} className="text-blue-400" />} label="Taille (cm)">
-                    <input type="number" name="height" value={formData.height || ''} onChange={handleNumberChange} className="w-full bg-black/20 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium" />
+                <InputCard icon={<Ruler size={18} className="text-white" />} label="Taille (cm)">
+                    <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => decrement('height')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                            <Minus size={14} />
+                        </button>
+                        <input type="number" name="height" value={formData.height || ''} onChange={handleNumberChange} className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                        <button type="button" onClick={() => increment('height')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                            <Plus size={14} />
+                        </button>
+                    </div>
                 </InputCard>
                 
                 <InputCard icon={<Calendar size={18} className="text-purple-400" />} label="Naissance">
-                    <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className="w-full bg-black/20 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm font-medium" style={{ colorScheme: 'dark' }}/>
+                    <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className="w-full bg-white/5 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm font-medium" style={{ colorScheme: 'dark' }}/>
                 </InputCard>
 
-                 <InputCard icon={<Gauge size={18} className="text-orange-400" />} label="VMA (km/h)">
-                    <input type="number" step="0.1" name="vma" value={formData.vma || ''} onChange={handleNumberChange} placeholder="Ex: 12.5" className="w-full bg-black/20 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium" />
+                 <InputCard icon={<Gauge size={18} className="text-white" />} label="VMA (km/h)">
+                    <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => decrement('vma', 0.5)} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                            <Minus size={14} />
+                        </button>
+                        <input type="number" step="0.1" name="vma" value={formData.vma || ''} onChange={handleNumberChange} placeholder="Ex: 12.5" className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                        <button type="button" onClick={() => increment('vma', 0.5)} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                            <Plus size={14} />
+                        </button>
+                    </div>
                 </InputCard>
 
                 <div className="col-span-2">
                     <InputCard icon={<Activity size={18} className="text-green-400" />} label="Niveau de course">
-                        <select name="level" value={formData.level} onChange={handleChange} className="w-full bg-black/20 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 font-medium">
+                        <select name="level" value={formData.level} onChange={handleChange} className="w-full bg-white/5 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 font-medium">
                             {Object.values(Level).map(level => (
                                 <option key={level} value={level} className="bg-[#111] text-white">{level}</option>
                             ))}
@@ -133,7 +165,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
 
                 <div className="col-span-2">
                      <InputCard icon={<Mail size={18} className="text-gray-400" />} label="Email (optionnel)">
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@exemple.com" className="w-full bg-black/20 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium" />
+                        <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@exemple.com" className="w-full bg-white/5 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium" />
                     </InputCard>
                 </div>
             </div>
@@ -150,7 +182,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
 const InputCard: React.FC<{ icon: React.ReactNode; label: string; children: React.ReactNode }> = ({ icon, label, children }) => (
     <div className="bg-white/5 backdrop-blur-sm p-3 rounded-xl border border-white/10 h-full flex flex-col justify-center transition-all hover:bg-white/10">
         <div className="flex items-center mb-2">
-            <div className="p-1.5 bg-black/20 rounded-md mr-2">{icon}</div>
+            <div className="p-1.5 bg-white/5 rounded-md mr-2">{icon}</div>
             <label className="font-bold text-xs text-gray-300 uppercase tracking-wider">{label}</label>
         </div>
         {children}

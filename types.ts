@@ -1,5 +1,6 @@
 
 export enum Distance {
+    FiveK = '5km',
     TenK = '10km',
     HalfMarathon = 'Semi-Marathon',
     Marathon = 'Marathon',
@@ -16,20 +17,31 @@ export interface WorkoutBlock {
     duration?: number; // in minutes
     distance?: number; // in km
     details: string;
+    hrZone?: string; // e.g., "Zone 2 (60-70% FCM)"
 }
 
-export type FeedbackType = 'easy' | 'medium' | 'hard';
+export type FeedbackSensation = 'easy' | 'medium' | 'hard';
+
+export interface SessionFeedback {
+    sensation: FeedbackSensation;
+    duration?: string; // e.g. "45:30"
+    distance?: number; // km
+    elevation?: number; // m
+    avgHeartRate?: number; // bpm
+    comment?: string;
+}
 
 export interface Session {
     id: string;
     day: string; // Lundi, Mardi, etc.
+    date?: Date; // Specific date for the session
     type: 'Endurance' | 'Fractionné' | 'Sortie longue' | 'Repos' | 'Course à rythme' | 'Côtes';
     title: string;
     duration?: number; // in minutes
     distance?: number; // in km
     structure: WorkoutBlock[];
     completed: boolean;
-    feedback?: FeedbackType;
+    feedback?: SessionFeedback;
 }
 
 export interface Week {
@@ -46,6 +58,8 @@ export interface Program {
     level: Level;
     raceName: string;
     raceDate: Date;
+    startDate?: Date; // User selected start date
+    trainingDays?: string[]; // User selected training days
     sessionsPerWeek: number;
     timeObjective: string;
     vma?: number;
@@ -69,6 +83,8 @@ export interface User {
     birthDate: string;
     level: Level;
     vma?: number;
+    hasOnboarded?: boolean;
+    activeProgramId?: string | null;
 }
 
 export type Page = 'welcome' | 'new-program' | 'home' | 'my-programs' | 'profile' | 'edit-profile' | 'payment' | 'calendar' | 'vma-calculator' | `week-${number}` | 'program-view';
@@ -82,13 +98,17 @@ export interface AppContextType {
     programHistory: Program[];
     viewedProgram: Program | null;
     setPage: (page: Page) => void;
-    updateUser: (userData: Partial<User>) => void;
-    createProgram: (settings: Omit<Program, 'id' | 'weeks' | 'totalWeeks'> & { vma?: number, raceInfo?: Program['raceInfo'] }) => void;
-    deleteProgram: () => void;
-    clearHistory: () => void;
-    completePayment: () => void;
-    updateProgram: (updatedProgram: Program) => void;
+    updateUser: (userData: Partial<User>) => Promise<void>;
+    createProgram: (settings: Omit<Program, 'id' | 'weeks' | 'totalWeeks'> & { vma?: number, raceInfo?: Program['raceInfo'] }) => Promise<void>;
+    deleteProgram: () => Promise<void>;
+    clearHistory: () => Promise<void>;
+    completePayment: () => Promise<void>;
+    updateProgram: (updatedProgram: Program) => Promise<void>;
     setViewedProgram: (program: Program | null) => void;
-    completeOnboarding: () => void;
-    adaptProgramIntensity: (reductionPercentage: number) => void;
+    completeOnboarding: () => Promise<void>;
+    adaptProgramIntensity: (reductionPercentage: number) => Promise<void>;
+    login: () => Promise<void>;
+    logout: () => Promise<void>;
+    isLoading: boolean;
+    isAuthenticated: boolean;
 }

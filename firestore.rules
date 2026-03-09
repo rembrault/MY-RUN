@@ -1,0 +1,114 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (matches auth.uid)
+    // Fields:
+    //   - name: string (optional)
+    //   - email: string (required)
+    //   - avatar: string (optional)
+    //   - weight: number (optional)
+    //   - height: number (optional)
+    //   - birthDate: string (optional)
+    //   - level: string (optional)
+    //   - vma: number (optional)
+    //   - activeProgramId: string (optional)
+    //   - hasOnboarded: boolean (optional)
+    //   - isPaid: boolean (optional)
+    //
+    // Subcollection: programs
+    // Document ID: programId
+    // Fields:
+    //   - id: string
+    //   - distance: string
+    //   - level: string
+    //   - raceName: string
+    //   - raceDate: string
+    //   - startDate: string
+    //   - trainingDays: array
+    //   - sessionsPerWeek: number
+    //   - timeObjective: string
+    //   - vma: number
+    //   - weeks: string (JSON)
+    //   - totalWeeks: number
+    //   - archivedDate: string (optional)
+    //   - raceInfo: string (JSON, optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUser(data) {
+      return (!('name' in data) || data.name is string) &&
+             ('email' in data && isValidEmail(data.email)) &&
+             (!('avatar' in data) || data.avatar is string) &&
+             (!('weight' in data) || data.weight is number) &&
+             (!('height' in data) || data.height is number) &&
+             (!('birthDate' in data) || data.birthDate is string) &&
+             (!('level' in data) || data.level is string) &&
+             (!('vma' in data) || data.vma is number) &&
+             (!('activeProgramId' in data) || data.activeProgramId is string) &&
+             (!('hasOnboarded' in data) || data.hasOnboarded is bool) &&
+             (!('isPaid' in data) || data.isPaid is bool);
+    }
+
+    function isValidProgram(data) {
+      return (!('id' in data) || data.id is string) &&
+             (!('distance' in data) || data.distance is string) &&
+             (!('level' in data) || data.level is string) &&
+             (!('raceName' in data) || data.raceName is string) &&
+             (!('raceDate' in data) || data.raceDate is string) &&
+             (!('startDate' in data) || data.startDate is string) &&
+             (!('trainingDays' in data) || data.trainingDays is list) &&
+             (!('sessionsPerWeek' in data) || data.sessionsPerWeek is number) &&
+             (!('timeObjective' in data) || data.timeObjective is string) &&
+             (!('vma' in data) || data.vma is number) &&
+             (!('weeks' in data) || data.weeks is string) &&
+             (!('totalWeeks' in data) || data.totalWeeks is number) &&
+             (!('archivedDate' in data) || data.archivedDate is string) &&
+             (!('raceInfo' in data) || data.raceInfo is string);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow delete: if isOwner(userId);
+
+      match /programs/{programId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidProgram(request.resource.data);
+        allow update: if isOwner(userId) && isValidProgram(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
