@@ -1,5 +1,5 @@
 import React, { ReactNode, useState, useRef, useEffect } from 'react';
-import { Home, User, Gauge, ScrollText } from 'lucide-react';
+import { Home, User, Gauge, ScrollText, Bot } from 'lucide-react'; // ← Bot ajouté
 import { useAppContext } from '../context/AppContext';
 import { Page } from '../types';
 import BottomNav from './BottomNav';
@@ -16,6 +16,7 @@ const DesktopNav: React.FC = () => {
   const navItems = [
     { id: 'home',           icon: Home,       label: 'Tableau de bord' },
     { id: 'my-programs',    icon: ScrollText, label: 'Mon programme'   },
+    { id: 'coach-ia',       icon: Bot,        label: 'Coach IA'        }, // ← NOUVEAU
     { id: 'vma-calculator', icon: Gauge,      label: 'Calculateur VMA' },
     { id: 'profile',        icon: User,       label: 'Mon profil'      },
   ];
@@ -33,18 +34,30 @@ const DesktopNav: React.FC = () => {
         const isActive =
           activePage === item.id ||
           (item.id === 'my-programs' && page.toString().startsWith('week-'));
+
+        const isCoach = item.id === 'coach-ia';
+
         return (
           <button
             key={item.id}
             onClick={() => handleNav(item.id as Page)}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 text-left
               ${isActive
-                ? 'bg-green-400/10 text-green-400 border border-green-400/20'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? isCoach
+                  ? 'bg-green-400/10 text-green-400 border border-green-400/20 shadow-[0_0_10px_rgba(0,255,135,0.1)]'
+                  : 'bg-green-400/10 text-green-400 border border-green-400/20'
+                : isCoach
+                  ? 'text-gray-400 hover:text-green-400 hover:bg-green-400/5'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
           >
             <item.icon size={18} />
             {item.label}
+            {isCoach && (
+              <span className="ml-auto text-[9px] font-bold bg-green-400/20 text-green-400 px-1.5 py-0.5 rounded-full">
+                IA
+              </span>
+            )}
           </button>
         );
       })}
@@ -79,11 +92,9 @@ const Layout: React.FC<LayoutProps> = ({ children, showBottomNav = true }) => {
 
       {/* ═══════════════════════════════════
           VUE MOBILE (< 768px)
-          Carte téléphone centrée — identique à avant
       ═══════════════════════════════════ */}
       <div className="flex md:hidden items-center justify-center min-h-screen p-2">
         <div className="relative w-full max-w-md h-[95vh] bg-[#111115] rounded-3xl border border-white/10 flex flex-col overflow-hidden">
-          {/* Indicateur de scroll */}
           <div className={`absolute top-0 right-2 w-1 h-full bg-[#00ff87]/80 rounded-full z-0 pointer-events-none transition-opacity duration-300 ${isScrolling ? 'opacity-80' : 'opacity-0'}`} />
           <main ref={mainRef} className="flex-grow overflow-y-auto p-4 z-10 scrollbar-hide">
             {children}
@@ -94,7 +105,6 @@ const Layout: React.FC<LayoutProps> = ({ children, showBottomNav = true }) => {
 
       {/* ═══════════════════════════════════
           VUE DESKTOP (≥ 768px)
-          Sidebar gauche + contenu pleine largeur
       ═══════════════════════════════════ */}
       <div className="hidden md:flex min-h-screen">
 
