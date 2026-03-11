@@ -1,7 +1,7 @@
 import React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { AppProvider, useAppContext } from './context/AppContext';
-import Auth from './pages/Auth';               // ← NOUVEAU
+import Auth from './pages/Auth';
 import Welcome from './pages/Welcome';
 import Questionnaire from './pages/Questionnaire/Questionnaire';
 import Home from './pages/Home';
@@ -13,14 +13,13 @@ import CalendarExport from './pages/CalendarExport';
 import VMACalculator from './pages/VMACalculator';
 import ProgramView from './pages/ProgramView';
 import MyPrograms from './pages/MyPrograms';
+import CoachIA from './pages/CoachIA';          // ← NOUVEAU
 import PageTransition from './components/PageTransition';
 
 const PageRenderer: React.FC = () => {
     const { page, program, hasOnboarded, isAuthenticated, isLoading } = useAppContext();
 
-    // ── Écran de chargement pendant la vérification Firebase ──
-    // Explication : Firebase met une seconde à vérifier si l'utilisateur
-    // est connecté. On affiche un spinner pendant ce temps.
+    // Spinner pendant vérification Firebase
     if (isLoading) {
         return (
             <div className="futuristic-grid min-h-screen flex items-center justify-center">
@@ -32,50 +31,37 @@ const PageRenderer: React.FC = () => {
         );
     }
 
-    // ── NOUVEAU : Si l'utilisateur n'est PAS connecté → Page Auth ──
-    // Explication : C'est le "garde" de l'app. Si pas connecté,
-    // peu importe où l'utilisateur veut aller, on lui montre la page de connexion.
-    if (!isAuthenticated) {
-        return <Auth />;
-    }
-
-    // ── À partir d'ici, l'utilisateur EST connecté ──
+    // Pas connecté → Auth
+    if (!isAuthenticated) return <Auth />;
 
     const getComponent = () => {
-        // 1. Onboarding Check (première visite)
-        if (!hasOnboarded) {
-            return <EditProfile isOnboarding={true} />;
-        }
+        if (!hasOnboarded) return <EditProfile isOnboarding={true} />;
+        if (page === 'new-program') return <Questionnaire />;
 
-        // 2. Questionnaire
-        if (page === 'new-program') {
-            return <Questionnaire />;
-        }
-
-        // 3. Routing Restreint (Pas de programme)
         if (!program) {
             switch (page) {
-                case 'home': return <Home />;
-                case 'profile': return <Profile />;
-                case 'edit-profile': return <EditProfile />;
-                case 'calendar': return <CalendarExport />;
-                case 'vma-calculator': return <VMACalculator />;
-                case 'program-view': return <ProgramView />;
-                case 'my-programs': return <MyPrograms />;
-                default: return <Welcome />;
+                case 'home':            return <Home />;
+                case 'profile':         return <Profile />;
+                case 'edit-profile':    return <EditProfile />;
+                case 'calendar':        return <CalendarExport />;
+                case 'vma-calculator':  return <VMACalculator />;
+                case 'program-view':    return <ProgramView />;
+                case 'my-programs':     return <MyPrograms />;
+                case 'coach-ia':        return <CoachIA />;  // ← NOUVEAU
+                default:                return <Welcome />;
             }
         }
 
-        // 4. Routing Complet
         switch (page) {
-            case 'home': return <Home />;
-            case 'my-programs': return <MyPrograms />;
-            case 'profile': return <Profile />;
-            case 'edit-profile': return <EditProfile />;
-            case 'payment': return <Payment />;
-            case 'calendar': return <CalendarExport />;
-            case 'vma-calculator': return <VMACalculator />;
-            case 'program-view': return <ProgramView />;
+            case 'home':            return <Home />;
+            case 'my-programs':     return <MyPrograms />;
+            case 'profile':         return <Profile />;
+            case 'edit-profile':    return <EditProfile />;
+            case 'payment':         return <Payment />;
+            case 'calendar':        return <CalendarExport />;
+            case 'vma-calculator':  return <VMACalculator />;
+            case 'program-view':    return <ProgramView />;
+            case 'coach-ia':        return <CoachIA />;     // ← NOUVEAU
             default:
                 if (page.startsWith('week-')) {
                     const weekIndex = parseInt(page.split('-')[1], 10);
@@ -94,12 +80,10 @@ const PageRenderer: React.FC = () => {
     );
 };
 
-const App: React.FC = () => {
-    return (
-        <AppProvider>
-            <PageRenderer />
-        </AppProvider>
-    );
-};
+const App: React.FC = () => (
+    <AppProvider>
+        <PageRenderer />
+    </AppProvider>
+);
 
 export default App;
