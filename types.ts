@@ -87,7 +87,7 @@ export interface User {
     activeProgramId?: string | null;
 }
 
-export type Page = 'welcome' | 'new-program' | 'home' | 'my-programs' | 'profile' | 'edit-profile' | 'payment' | 'calendar' | 'vma-calculator' | `week-${number}` | 'program-view';
+export type Page = 'welcome' | 'new-program' | 'home' | 'my-programs' | 'profile' | 'edit-profile' | 'payment' | 'calendar' | 'vma-calculator' | 'coach-ia' | `week-${number}` | 'program-view';
 
 export interface AppContextType {
     user: User;
