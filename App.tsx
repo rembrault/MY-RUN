@@ -16,6 +16,8 @@ import MyPrograms from './pages/MyPrograms';
 import CoachIA from './pages/CoachIA';          // ← NOUVEAU
 import PageTransition from './components/PageTransition';
 
+// rebuild
+
 const PageRenderer: React.FC = () => {
     const { page, program, hasOnboarded, isAuthenticated, isLoading } = useAppContext();
 
