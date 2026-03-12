@@ -45,6 +45,9 @@ export interface Session {
 }
 
 export interface Week {
+    // ... propriétés existantes ...
+    isFree?: boolean;               // ← NOUVEAU : semaine gratuite
+    isConditioningWeek?: boolean;   // ← NOUVEAU : semaine de mise en forme
     weekNumber: number;
     title: string;
     sessions: Session[];
@@ -53,6 +56,9 @@ export interface Week {
 }
 
 export interface Program {
+    // ... propriétés existantes ...
+    isConditioningProgram?: boolean;  // ← NOUVEAU
+    isIntensiveProgram?: boolean;     // ← NOUVEAU
     id: string;
     distance: Distance;
     level: Level;
