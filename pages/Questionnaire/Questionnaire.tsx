@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, LoaderCircle, Check } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
@@ -6,12 +5,26 @@ import { Distance, Level, Program } from '../../types';
 import Step1Distance from './Step1Distance';
 import Step2Level from './Step2Level';
 import Step3Personalize from './Step3Personalize';
+import ProgramTimingAdvisor from '../../components/ProgramTimingAdvisor';
+import ProgramPresentationScreen from '../../components/ProgramPresentation';
+import {
+    analyzeProgramTiming,
+    generateConditioningPlan,
+    generateIntensivePlan,
+    generatePlan,
+    ProgramRecommendation,
+} from '../../services/planGenerator';
 
 const Questionnaire: React.FC = () => {
     const { createProgram, setPage, user } = useAppContext();
     const [step, setStep] = useState(1);
     const [isCreating, setIsCreating] = useState(false);
-    
+    const [showTimingAdvisor, setShowTimingAdvisor] = useState(false);
+const [timingRec, setTimingRec] = useState<ProgramRecommendation | null>(null);
+const [savedFormData, setSavedFormData] = useState<typeof formData | null>(null);
+const [showPresentation, setShowPresentation] = useState(false);
+const [generatedProgram, setGeneratedProgram] = useState<Program | null>(null);
+
     const [formData, setFormData] = useState({
         distance: Distance.FiveK,
         level: Level.Beginner,
@@ -38,15 +51,66 @@ const Questionnaire: React.FC = () => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
     
-    const handleSubmit = () => {
-        setIsCreating(true);
-        // Simulate network delay for a better UX
-        setTimeout(() => {
+const launchWithPresentation = (program: Program) => {
+    setGeneratedProgram(program);
+    setIsCreating(false);
+    setShowPresentation(true);
+};
+
+const handleSubmit = () => {
+    setIsCreating(true);
+    const raceDate = new Date(formData.raceDate);
+    const rec = analyzeProgramTiming(formData.distance, formData.level, raceDate);
+
+    setTimeout(() => {
+        if (rec.scenario === 'optimal') {
+            const program = generatePlan({ ...formData, vma: formData.vma });
             createProgram(formData);
-            setPage('my-programs'); // Ensure we go to the detailed view
+            launchWithPresentation(program);
+        } else {
+            setSavedFormData({ ...formData });
+            setTimingRec(rec);
             setIsCreating(false);
-        }, 2000);
-    };
+            setShowTimingAdvisor(true);
+        }
+    }, 1500);
+};
+
+const handleAcceptConditioning = () => {
+    if (!savedFormData || !timingRec) return;
+    setIsCreating(true);
+    setTimeout(() => {
+        const conditioningProgram = generateConditioningPlan({
+            ...savedFormData,
+            conditioningWeeks: timingRec.conditioningWeeks!,
+        });
+        createProgram(savedFormData);
+        setShowTimingAdvisor(false);
+        launchWithPresentation(conditioningProgram);
+    }, 1000);
+};
+
+const handleAcceptIntensive = () => {
+    if (!savedFormData) return;
+    setIsCreating(true);
+    setTimeout(() => {
+        const intensivePlan = generateIntensivePlan({ ...savedFormData });
+        createProgram(savedFormData);
+        setShowTimingAdvisor(false);
+        launchWithPresentation(intensivePlan);
+    }, 1000);
+};
+
+const handleAcceptOptimal = () => {
+    if (!savedFormData) return;
+    setIsCreating(true);
+    setTimeout(() => {
+        const program = generatePlan({ ...savedFormData });
+        createProgram(savedFormData);
+        setShowTimingAdvisor(false);
+        launchWithPresentation(program);
+    }, 1000);
+};
 
     if (isCreating) {
         return (
@@ -60,6 +124,35 @@ const Questionnaire: React.FC = () => {
         );
     }
 
+    if (showTimingAdvisor && timingRec && savedFormData) {
+    return (
+        <div className="futuristic-grid min-h-screen p-4 flex flex-col justify-center">
+            <div className="max-w-lg mx-auto w-full">
+                <ProgramTimingAdvisor
+                    distance={savedFormData.distance}
+                    level={savedFormData.level}
+                    raceDate={new Date(savedFormData.raceDate)}
+                    onAcceptOptimal={handleAcceptOptimal}
+                    onAcceptConditioning={handleAcceptConditioning}
+                    onAcceptIntensive={handleAcceptIntensive}
+                />
+            </div>
+        </div>
+    );
+}
+
+if (showPresentation && generatedProgram) {
+    return (
+        <ProgramPresentationScreen
+            program={generatedProgram}
+            onComplete={() => {
+                setShowPresentation(false);
+                setGeneratedProgram(null);
+                setPage('home');
+            }}
+        />
+    );
+}
     const steps = [1, 2, 3];
 
     return (
