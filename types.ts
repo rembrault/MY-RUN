@@ -95,7 +95,8 @@ export interface User {
 
 export type Page = 'welcome' | 'new-program' | 'home' | 'my-programs' | 'profile' | 'edit-profile' | 'payment' | 'calendar' | 'vma-calculator' | 'coach-ia' | `week-${number}` | 'program-view';
 
-export interface AppContextType {
+export interface AppContextType { 
+    saveProgram: (program: Program) => Promise<void>;
     user: User;
     program: Program | null;
     isPaid: boolean;
