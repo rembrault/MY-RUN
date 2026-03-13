@@ -1,10 +1,9 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { AppContextType, Page, Program, User, Level } from '../types';
 import { generatePlan } from '../services/planGenerator';
 import { auth, db, googleProvider } from '../firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, getDocs, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -27,7 +26,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const savedUser = localStorage.getItem('myrun_user');
         return savedUser ? JSON.parse(savedUser) : initialUser;
     });
-    
+
     const [program, setProgram] = useState<Program | null>(() => {
         const savedProgram = localStorage.getItem('myrun_program');
         if (savedProgram) {
@@ -50,8 +49,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const savedHistory = localStorage.getItem('myrun_program_history');
         if (savedHistory) {
             const parsed = JSON.parse(savedHistory);
-            return parsed.map((p: Program) => ({ 
-                ...p, 
+            return parsed.map((p: Program) => ({
+                ...p,
                 raceDate: new Date(p.raceDate),
                 startDate: p.startDate ? new Date(p.startDate) : undefined
             }));
@@ -60,13 +59,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
 
     const [isPaid, setIsPaid] = useState<boolean>(() => {
-         const savedIsPaid = localStorage.getItem('myrun_isPaid');
-         return savedIsPaid ? JSON.parse(savedIsPaid) : false;
+        const savedIsPaid = localStorage.getItem('myrun_isPaid');
+        return savedIsPaid ? JSON.parse(savedIsPaid) : false;
     });
 
     const [page, setPage] = useState<Page>(program ? 'home' : 'welcome');
     const [viewedProgram, setViewedProgram] = useState<Program | null>(null);
-    
+
     // Helper to serialize program for Firestore
     const serializeProgram = (p: Program) => ({
         ...p,
@@ -93,16 +92,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             if (currentUser) {
                 try {
-                    // Fetch User Data
                     const userDocRef = doc(db, 'users', currentUser.uid);
                     const userDoc = await getDoc(userDocRef);
 
                     if (userDoc.exists()) {
                         const userData = userDoc.data() as User;
                         setUser(userData);
-                        setHasOnboarded(userData.hasOnboarded || false); // Assuming hasOnboarded is stored in user profile
-                        
-                        // Fetch Active Program
+                        setHasOnboarded(userData.hasOnboarded || false);
+
                         if (userData.activeProgramId) {
                             const programDocRef = doc(db, 'users', currentUser.uid, 'programs', userData.activeProgramId);
                             const programDoc = await getDoc(programDocRef);
@@ -113,54 +110,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                             setProgram(null);
                         }
 
-                        // Fetch History
                         const programsRef = collection(db, 'users', currentUser.uid, 'programs');
-                        const q = query(programsRef); // You might want to filter by archivedDate or something
+                        const q = query(programsRef);
                         const querySnapshot = await getDocs(q);
                         const history: Program[] = [];
                         querySnapshot.forEach((doc) => {
                             const p = deserializeProgram(doc.data());
-                            if (p.id !== userData.activeProgramId) { // Exclude active program from history list if needed, or just separate them
+                            if (p.id !== userData.activeProgramId) {
                                 history.push(p);
                             }
                         });
-                        // Filter history to only include archived programs if that's the logic
                         setProgramHistory(history.filter(p => p.archivedDate));
                     } else {
-                        // New Firestore User: Initialize with current local state or defaults
-                        // If we have local data, we might want to upload it?
-                        // For now, let's just save the current 'user' state to Firestore
                         await setDoc(userDocRef, { ...user, email: currentUser.email });
                         setUser(prev => ({ ...prev, email: currentUser.email || '' }));
                     }
                 } catch (error) {
                     console.error("Error fetching Firestore data:", error);
                 }
-            } else {
-                // Fallback to localStorage is handled by initial state, but if we logout, we might want to reset?
-                // The logout function handles reset.
             }
             setIsLoading(false);
         });
         return () => unsubscribe();
     }, []);
 
-    // Persistence Effects (Local Storage - kept for offline/fallback or just sync)
-    // If logged in, we also save to Firestore in the specific actions (updateUser, etc.)
-    
     useEffect(() => {
         localStorage.setItem('myrun_user', JSON.stringify(user));
     }, [user]);
 
     useEffect(() => {
         localStorage.setItem('myrun_program', JSON.stringify(program));
-         if (program && page === 'welcome') {
+        if (program && page === 'welcome') {
             setPage('home');
         } else if (!program && page.startsWith('week-')) {
             setPage('welcome');
         }
     }, [program, page]);
-    
+
     useEffect(() => {
         localStorage.setItem('myrun_program_history', JSON.stringify(programHistory));
     }, [programHistory]);
@@ -185,12 +171,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         try {
             await signOut(auth);
             setFirebaseUser(null);
-            // Reset to initial state
             setUser(initialUser);
             setProgram(null);
             setProgramHistory([]);
             setHasOnboarded(false);
-            localStorage.clear(); 
+            localStorage.clear();
             setPage('welcome');
         } catch (error) {
             console.error("Logout failed", error);
@@ -200,7 +185,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const updateUser = async (userData: Partial<User>) => {
         const newUser = { ...user, ...userData };
         setUser(newUser);
-        
+
         if (firebaseUser) {
             try {
                 const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -214,7 +199,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const completeOnboarding = async () => {
         setHasOnboarded(true);
         setPage('welcome');
-        
+
         if (firebaseUser) {
             try {
                 const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -225,23 +210,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
+    // ── createProgram : garde l'ancienne logique pour compatibilité ──
     const createProgram = async (settings: Omit<Program, 'id' | 'weeks' | 'totalWeeks'> & { vma?: number, raceInfo?: Program['raceInfo'] }) => {
         const newProgram = generatePlan(settings);
         setProgram(newProgram);
         setIsPaid(false);
-        setPage('my-programs');
+        // ⚠️ Ne redirige PLUS automatiquement — c'est le Questionnaire qui gère la navigation
+        // setPage('my-programs'); ← supprimé intentionnellement
 
         if (firebaseUser) {
             try {
-                // Save program to subcollection
                 const programDocRef = doc(db, 'users', firebaseUser.uid, 'programs', newProgram.id);
                 await setDoc(programDocRef, serializeProgram(newProgram));
-                
-                // Update active program ID in user doc
                 const userDocRef = doc(db, 'users', firebaseUser.uid);
                 await updateDoc(userDocRef, { activeProgramId: newProgram.id });
             } catch (error) {
                 console.error("Error creating program in Firestore:", error);
+            }
+        }
+    };
+
+    // ── saveProgram : sauvegarde un programme déjà généré (sans regénérer) ──
+    const saveProgram = async (newProgram: Program) => {
+        setProgram(newProgram);
+        setIsPaid(false);
+
+        if (firebaseUser) {
+            try {
+                const programDocRef = doc(db, 'users', firebaseUser.uid, 'programs', newProgram.id);
+                await setDoc(programDocRef, serializeProgram(newProgram));
+                const userDocRef = doc(db, 'users', firebaseUser.uid);
+                await updateDoc(userDocRef, { activeProgramId: newProgram.id });
+            } catch (error) {
+                console.error("Error saving program in Firestore:", error);
             }
         }
     };
@@ -253,16 +254,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 archivedDate: new Date().toISOString()
             };
             setProgramHistory(prevHistory => [archivedProgram, ...prevHistory]);
-            
+
             if (firebaseUser) {
                 try {
-                    // Update the program in subcollection to be archived
                     const programDocRef = doc(db, 'users', firebaseUser.uid, 'programs', program.id);
                     await updateDoc(programDocRef, { archivedDate: archivedProgram.archivedDate });
-                    
-                    // Remove active program ID from user doc
                     const userDocRef = doc(db, 'users', firebaseUser.uid);
-                    await updateDoc(userDocRef, { activeProgramId: null }); // Or delete field
+                    await updateDoc(userDocRef, { activeProgramId: null });
                 } catch (error) {
                     console.error("Error archiving program:", error);
                 }
@@ -277,17 +275,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const clearHistory = async () => {
         setProgramHistory([]);
         localStorage.removeItem('myrun_program_history');
-        
+
         if (firebaseUser) {
             try {
-                // Delete all programs in subcollection that are archived?
-                // Or just delete all programs except active?
-                // For simplicity, let's just delete the history from local state.
-                // Deleting from Firestore might require iterating.
                 const programsRef = collection(db, 'users', firebaseUser.uid, 'programs');
                 const q = query(programsRef);
                 const snapshot = await getDocs(q);
-                const batchPromises = [];
+                const batchPromises: Promise<void>[] = [];
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     if (data.archivedDate) {
@@ -304,10 +298,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const completePayment = async () => {
         setIsPaid(true);
         setPage('home');
-        // Update Firestore if needed (e.g. isPaid field in user or program)
         if (firebaseUser) {
-             const userDocRef = doc(db, 'users', firebaseUser.uid);
-             await updateDoc(userDocRef, { isPaid: true });
+            const userDocRef = doc(db, 'users', firebaseUser.uid);
+            await updateDoc(userDocRef, { isPaid: true });
         }
     };
 
@@ -322,25 +315,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             }
         }
     };
-    
+
     const adaptProgramIntensity = async (reductionPercentage: number) => {
         if (!program || !program.vma) return;
-        
+
         const currentVMA = program.vma;
         const newVMA = parseFloat((currentVMA * (1 - reductionPercentage / 100)).toFixed(1));
-        
-        // Update user VMA
+
         updateUser({ vma: newVMA });
-        
-        // Update program VMA reference
-        const updatedProgram = {
-            ...program,
-            vma: newVMA
-        };
+
+        const updatedProgram = { ...program, vma: newVMA };
         setProgram(updatedProgram);
-        
+
         if (firebaseUser) {
-             try {
+            try {
                 const programDocRef = doc(db, 'users', firebaseUser.uid, 'programs', program.id);
                 await setDoc(programDocRef, serializeProgram(updatedProgram), { merge: true });
             } catch (error) {
@@ -360,6 +348,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setPage,
         updateUser,
         createProgram,
+        saveProgram,       // ← NOUVEAU
         deleteProgram,
         clearHistory,
         completePayment,
