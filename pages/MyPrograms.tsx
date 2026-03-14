@@ -1,216 +1,353 @@
-
-import React, { useRef } from 'react';
-import { Lock, Plus, Trash2, Eye, Trophy, Calendar, Camera, Check, Image as ImageIcon } from 'lucide-react';
-import Layout from '../components/Layout';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Lock, ChevronRight, Trash2, Check, Trophy, Zap, Camera } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { Program } from '../types';
+import Layout from '../components/Layout';
 
 const MyPrograms: React.FC = () => {
-    const { program, setPage, deleteProgram, isPaid, programHistory, setViewedProgram, updateProgram } = useAppContext();
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const { program, isPaid, deleteProgram, setPage } = useAppContext();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    const handleGenerateNewProgram = () => {
-        if (!program || window.confirm('Voulez-vous archiver votre programme actuel et en créer un nouveau ?')) {
-            if (program) deleteProgram(); // Archive current
-            setPage('new-program');
-        }
-    };
-
-    const confirmDelete = () => {
-        if (window.confirm('Voulez-vous vraiment supprimer ce programme ? Toutes les données seront effacées.')) {
-            deleteProgram();
-            setPage('home'); // Go back to dashboard after delete
-        }
-    };
-
-    const handleViewHistory = (p: Program) => {
-        setViewedProgram(p);
-        setPage('program-view');
-    };
-
-    const handleImageClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file && program) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                if (reader.result) {
-                    const updatedProgram = { ...program, image: reader.result as string };
-                    updateProgram(updatedProgram);
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
+  if (!program) {
     return (
-        <Layout>
-            <div className="pt-4 pb-20">
-                <header className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-white">Mes Programmes</h1>
-                    {program && (
-                         <button 
-                            onClick={confirmDelete} 
-                            className="text-red-500 p-2 hover:bg-red-500/10 rounded-full transition-colors" 
-                            title="Supprimer le programme actif"
-                        >
-                            <Trash2 size={20} />
-                        </button>
-                    )}
-                </header>
+      <Layout>
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <p className="text-gray-500 text-sm">Aucun programme actif.</p>
+          <motion.button
+            onClick={() => setPage('new-program')}
+            whileTap={{ scale: 0.97 }}
+            className="px-6 py-3 rounded-2xl font-bold text-black text-sm"
+            style={{ background: 'linear-gradient(135deg, #00ff87, #00d4ff)' }}
+          >
+            + Créer un programme
+          </motion.button>
+        </div>
+      </Layout>
+    );
+  }
 
-                {/* PROGRAMME ACTIF */}
-                {program ? (
-                    <div className="mb-10">
-                        {/* PROGRAMME BANNER / IMAGE */}
-                        <div className="relative h-48 rounded-2xl overflow-hidden mb-6 border border-white/10 group shadow-lg">
-                            {program.image ? (
-                                <img src={program.image} alt="Program cover" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                            ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-blue-900 via-[#0a0a0f] to-black flex items-center justify-center">
-                                     <ImageIcon size={48} className="text-white/10" />
-                                </div>
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                            
-                            <div className="absolute bottom-4 left-4 right-4">
-                                 <span className="text-green-400 text-[10px] font-bold uppercase tracking-wider bg-green-900/30 border border-green-500/30 px-2 py-1 rounded-md backdrop-blur-md shadow-sm">En cours</span>
-                                 <h2 className="text-2xl font-bold text-white mt-2 text-shadow-sm leading-tight">{program.raceName}</h2>
-                                 <p className="text-sm text-gray-300 mt-1 flex items-center gap-2">
-                                    <span>{program.distance}</span>
-                                    <span className="w-1 h-1 bg-gray-500 rounded-full"></span>
-                                    <span>{program.totalWeeks} semaines</span>
-                                 </p>
-                            </div>
+  const completedSessions = program.weeks
+    .flatMap(w => w.sessions)
+    .filter(s => s.completed).length;
+  const totalSessions = program.weeks
+    .flatMap(w => w.sessions)
+    .filter(s => s.type !== 'Repos').length;
+  const progressPct = totalSessions > 0
+    ? Math.round((completedSessions / totalSessions) * 100)
+    : 0;
 
-                            <button 
-                                onClick={handleImageClick}
-                                className="absolute top-3 right-3 p-2 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-md transition-all border border-white/10"
-                            >
-                                <Camera size={18} />
-                            </button>
-                            <input 
-                                type="file" 
-                                ref={fileInputRef} 
-                                className="hidden" 
-                                accept="image/*" 
-                                onChange={handleFileChange} 
-                            />
-                        </div>
+  const distanceLabels: Record<string, string> = {
+    '5k': '5 KM', '10k': '10 KM', 'semi-marathon': 'Semi-Marathon', 'marathon': 'Marathon',
+  };
 
-                        <div className="space-y-3">
-                            {program.weeks.map((week, index) => {
-                                const isLocked = !isPaid && index > 0;
-                                const isFirstWeek = index === 0;
-                                const nonRestSessions = week.sessions.filter(s => s.type !== 'Repos');
-                                const completedInWeek = nonRestSessions.filter(s => s.completed).length;
-                                const isCompleted = nonRestSessions.length > 0 && completedInWeek === nonRestSessions.length;
+  const isConditioning = (program as any).isConditioningProgram;
+  const isIntensive = (program as any).isIntensiveProgram;
 
-                                return (
-                                    <div
-                                        key={week.weekNumber}
-                                        onClick={() => isLocked ? setPage('payment') : setPage(`week-${index}` as any)}
-                                        className={`p-4 rounded-xl border flex justify-between items-center transition-all duration-300 
-                                            ${isLocked ? 'opacity-60 bg-white/5 border-white/10' : 'cursor-pointer hover:bg-white/10'}
-                                            ${isCompleted 
-                                                ? 'border-green-500 bg-green-500/10 shadow-[0_0_15px_rgba(34,197,94,0.15)]' 
-                                                : 'bg-white/5 border-white/10 hover:border-cyan-400/50'
-                                            }
-                                        `}
-                                    >
-                                        <div>
-                                            <div className="flex items-center gap-3">
-                                                <p className={`font-bold text-lg ${isCompleted ? 'text-green-400' : 'text-white'}`}>
-                                                    Semaine {week.weekNumber}
-                                                </p>
-                                                {isCompleted && (
-                                                    <div className="bg-green-500 text-black rounded-full p-0.5">
-                                                        <Check size={12} strokeWidth={4} />
-                                                    </div>
-                                                )}
-                                                {isFirstWeek && !isPaid && !isCompleted && (
-                                                    <span className="bg-green-500/20 text-green-300 text-[10px] font-bold px-2 py-1 rounded-full">
-                                                        GRATUIT
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className={`text-sm mt-1 ${isCompleted ? 'text-green-200/70' : 'text-gray-400'}`}>
-                                                {week.title}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-right">
-                                                <p className={`font-semibold ${isCompleted ? 'text-green-300' : 'text-white'}`}>
-                                                    {completedInWeek}/{week.sessionsCount}
-                                                </p>
-                                                <p className={`text-xs ${isCompleted ? 'text-green-400/50' : 'text-gray-500'}`}>séances</p>
-                                            </div>
-                                            {isLocked && <Lock size={20} className="text-yellow-400" />}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="bg-white/5 p-8 rounded-2xl border border-white/10 text-center mb-8">
-                        <p className="text-gray-300 mb-4">Vous n'avez pas de programme actif.</p>
-                         <button 
-                            onClick={handleGenerateNewProgram}
-                            className="bg-green-500 text-black font-bold py-3 px-6 rounded-full inline-flex items-center gap-2 hover:scale-105 transition-transform"
-                        >
-                            <Plus size={18} /> Créer un programme
-                        </button>
-                    </div>
+  const headerColor = isConditioning
+    ? { from: '#22c55e', to: '#10b981' }
+    : isIntensive
+    ? { from: '#f59e0b', to: '#ef4444' }
+    : { from: '#00d4ff', to: '#00ff87' };
+
+  return (
+    <Layout>
+      <div className="flex flex-col gap-5">
+
+        {/* Titre */}
+        <motion.div
+          className="flex items-center justify-between"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-2xl font-black text-white">Mes Programmes</h1>
+          <motion.button
+            onClick={() => setShowDeleteConfirm(true)}
+            whileTap={{ scale: 0.9 }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}
+          >
+            <Trash2 size={15} className="text-red-400" />
+          </motion.button>
+        </motion.div>
+
+        {/* Hero card programme */}
+        <motion.div
+          className="relative rounded-3xl overflow-hidden"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          style={{
+            background: `linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6))`,
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          {/* Fond dégradé */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, ${headerColor.from}15, ${headerColor.to}08)`,
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: `linear-gradient(90deg, transparent, ${headerColor.from}60, transparent)` }}
+          />
+
+          {/* Image placeholder */}
+          <div className="relative h-32 flex items-center justify-center">
+            <motion.div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{
+                background: `linear-gradient(135deg, ${headerColor.from}20, ${headerColor.to}10)`,
+                border: `1px solid ${headerColor.from}30`,
+              }}
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              <Trophy size={24} style={{ color: headerColor.from }} />
+            </motion.div>
+            <div className="absolute top-3 right-3 w-8 h-8 rounded-xl bg-black/40 flex items-center justify-center border border-white/10">
+              <Camera size={13} className="text-gray-500" />
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className="relative px-5 pb-5">
+            <div className="flex items-center gap-2 mb-1">
+              <span
+                className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                style={{
+                  background: `${headerColor.from}15`,
+                  border: `1px solid ${headerColor.from}30`,
+                  color: headerColor.from,
+                }}
+              >
+                {isConditioning ? '🌿 Mise en Forme' : isIntensive ? '⚡ Intensif' : '🏆 En Cours'}
+              </span>
+            </div>
+            <p className="text-white font-bold text-base">
+              {distanceLabels[program.distance] || program.distance}
+              {' · '}{program.totalWeeks} semaines
+            </p>
+
+            {/* Barre de progression */}
+            <div className="mt-3">
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-gray-500">Progression globale</span>
+                <span className="font-bold" style={{ color: headerColor.from }}>{progressPct}%</span>
+              </div>
+              <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ background: `linear-gradient(90deg, ${headerColor.from}, ${headerColor.to})` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Liste des semaines */}
+        <div className="flex flex-col gap-2">
+          {program.weeks.map((week, index) => {
+            const isFree = (week as any).isFree;
+            const isLocked = !isFree && !isPaid;
+            const weekCompleted = week.sessions
+              .filter(s => s.type !== 'Repos')
+              .every(s => s.completed);
+            const weekStarted = week.sessions.some(s => s.completed);
+            const sessionsDone = week.sessions.filter(s => s.completed).length;
+            const sessionsTotal = week.sessions.filter(s => s.type !== 'Repos').length;
+
+            const statusColor = weekCompleted
+              ? '#00ff87'
+              : weekStarted
+              ? '#00d4ff'
+              : isFree
+              ? '#fbbf24'
+              : isLocked
+              ? 'rgba(255,255,255,0.2)'
+              : 'rgba(255,255,255,0.5)';
+
+            return (
+              <motion.button
+                key={week.weekNumber}
+                onClick={() => !isLocked && setPage(`week-${index}` as any)}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 + index * 0.04, duration: 0.4 }}
+                whileTap={!isLocked ? { scale: 0.98 } : {}}
+                whileHover={!isLocked ? { x: 3 } : {}}
+                className="relative w-full text-left rounded-2xl p-4 group transition-colors duration-200 overflow-hidden"
+                style={{
+                  background: weekCompleted
+                    ? 'rgba(0,255,135,0.04)'
+                    : isLocked
+                    ? 'rgba(255,255,255,0.01)'
+                    : 'rgba(255,255,255,0.03)',
+                  border: weekCompleted
+                    ? '1px solid rgba(0,255,135,0.15)'
+                    : isFree
+                    ? '1px solid rgba(251,191,36,0.25)'
+                    : '1px solid rgba(255,255,255,0.06)',
+                  opacity: isLocked && !isFree ? 0.6 : 1,
+                }}
+              >
+                {/* Hover overlay */}
+                {!isLocked && (
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/2 transition-colors duration-200 rounded-2xl" />
                 )}
 
-                {/* HISTORIQUE */}
-                <div>
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <Trophy size={18} className="text-yellow-400" /> Historique
-                    </h3>
-                    
-                    {programHistory.length > 0 ? (
-                        <div className="space-y-3">
-                            {programHistory.map(p => (
-                                <div key={p.id} className="bg-black/20 p-4 rounded-xl flex justify-between items-center border border-white/5">
-                                    <div>
-                                        <p className="font-bold text-white">{p.raceName}</p>
-                                        <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                                            <span>{p.distance}</span>
-                                            <span>•</span>
-                                            <span className="flex items-center gap-1"><Calendar size={10}/> {new Date(p.raceDate).toLocaleDateString('fr-FR')}</span>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => handleViewHistory(p)} className="text-cyan-400 p-2 hover:bg-cyan-500/10 rounded-full">
-                                        <Eye size={20} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                <div className="relative flex items-center gap-4">
+                  {/* Numéro semaine */}
+                  <div
+                    className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black"
+                    style={{
+                      background: weekCompleted
+                        ? 'rgba(0,255,135,0.15)'
+                        : `rgba(255,255,255,0.05)`,
+                      border: `1px solid ${statusColor}25`,
+                      color: weekCompleted ? '#00ff87' : 'rgba(255,255,255,0.5)',
+                    }}
+                  >
+                    {weekCompleted ? <Check size={14} className="text-green-400" /> : week.weekNumber}
+                  </div>
+
+                  {/* Infos */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-sm font-bold text-white truncate">
+                        Semaine {week.weekNumber}
+                      </span>
+                      {isFree && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
+                          style={{
+                            background: 'rgba(251,191,36,0.15)',
+                            border: '1px solid rgba(251,191,36,0.3)',
+                            color: '#fbbf24',
+                          }}>
+                          Gratuit
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600 truncate">{week.title}</p>
+                  </div>
+
+                  {/* Droite : sessions ou cadenas */}
+                  <div className="flex-shrink-0 flex items-center gap-2">
+                    {isLocked ? (
+                      <Lock size={14} className="text-gray-700" />
                     ) : (
-                        <p className="text-sm text-gray-500 italic">Aucun programme terminé.</p>
+                      <>
+                        <div className="text-right">
+                          <p className="text-sm font-bold" style={{ color: statusColor }}>
+                            {sessionsDone}/{sessionsTotal}
+                          </p>
+                          <p className="text-[10px] text-gray-600">séances</p>
+                        </div>
+                        <ChevronRight size={14} className="text-gray-700 group-hover:text-gray-500 transition-colors" />
+                      </>
                     )}
+                  </div>
                 </div>
 
-                {/* BOUTON CRÉATION SI PROGRAMME EXISTE DÉJÀ (Pour le remplacer) */}
-                {program && (
-                    <div className="mt-8 pt-6 border-t border-white/10">
-                         <button 
-                            onClick={handleGenerateNewProgram}
-                            className="w-full bg-white/5 text-gray-300 font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors text-sm"
-                        >
-                            <Plus size={16} />
-                            Commencer un nouveau programme
-                        </button>
-                    </div>
+                {/* Mini barre de progression de la semaine */}
+                {!isLocked && sessionsTotal > 0 && (
+                  <div className="relative mt-3 h-0.5 bg-white/5 rounded-full overflow-hidden">
+                    <motion.div
+                      className="absolute inset-y-0 left-0 rounded-full"
+                      style={{
+                        background: weekCompleted
+                          ? '#00ff87'
+                          : `linear-gradient(90deg, #00d4ff, #00ff87)`,
+                        width: `${(sessionsDone / sessionsTotal) * 100}%`,
+                      }}
+                      initial={{ scaleX: 0, transformOrigin: 'left' }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ delay: 0.3 + index * 0.04, duration: 0.6 }}
+                    />
+                  </div>
                 )}
-            </div>
-        </Layout>
-    );
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* CTA paiement si locked */}
+        {!isPaid && program.weeks.some(w => !(w as any).isFree) && (
+          <motion.button
+            onClick={() => setPage('payment')}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.01 }}
+            className="w-full py-4 rounded-2xl font-bold text-black text-sm relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #00ff87, #00d4ff)',
+              boxShadow: '0 0 30px rgba(0,255,135,0.25)',
+            }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-white/20"
+              initial={{ x: '-100%' }}
+              whileHover={{ x: '100%' }}
+              transition={{ duration: 0.4 }}
+            />
+            🔓 Débloquer tout le programme
+          </motion.button>
+        )}
+      </div>
+
+      {/* Modal suppression */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+            <motion.div
+              className="relative w-full max-w-sm rounded-3xl p-6 z-10"
+              style={{
+                background: 'rgba(15,15,20,0.95)',
+                border: '1px solid rgba(239,68,68,0.2)',
+              }}
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            >
+              <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 mx-auto">
+                <Trash2 size={20} className="text-red-400" />
+              </div>
+              <h3 className="text-white font-black text-lg text-center mb-2">Supprimer ce programme ?</h3>
+              <p className="text-gray-500 text-sm text-center mb-6">Il sera archivé dans l'historique.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 rounded-2xl text-sm font-semibold text-gray-400 border border-white/10"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={() => { deleteProgram(); setShowDeleteConfirm(false); }}
+                  className="flex-1 py-3 rounded-2xl text-sm font-bold text-white bg-red-500/20 border border-red-500/30"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Layout>
+  );
 };
 
 export default MyPrograms;
