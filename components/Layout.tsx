@@ -1,5 +1,6 @@
 import React, { ReactNode, useState, useRef, useEffect } from 'react';
-import { Home, User, Gauge, ScrollText, Bot } from 'lucide-react'; // ← Bot ajouté
+import { Home, User, Gauge, ScrollText, Bot, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import { Page } from '../types';
 import BottomNav from './BottomNav';
@@ -9,16 +10,90 @@ interface LayoutProps {
   showBottomNav?: boolean;
 }
 
+// ── Particules d'ambiance ────────────────────────────────────
+const AmbientParticles: React.FC = () => {
+  const particles = Array.from({ length: 18 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 2 + 1,
+    duration: Math.random() * 8 + 6,
+    delay: Math.random() * 4,
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map(p => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full bg-green-400/20"
+          style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size }}
+          animate={{
+            opacity: [0, 0.6, 0],
+            y: [0, -30, 0],
+            scale: [0.5, 1, 0.5],
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// ── Logo animé avec gradient ─────────────────────────────────
+const AnimatedLogo: React.FC = () => {
+  return (
+    <motion.div
+      className="mb-10 relative"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      <div className="flex items-center gap-1 mb-1">
+        <motion.div
+          className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-400 to-green-400 flex items-center justify-center"
+          animate={{ rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <Zap size={12} className="text-black" />
+        </motion.div>
+        <h1 className="text-2xl font-black tracking-widest">
+          <motion.span
+            className="inline-block"
+            style={{
+              background: 'linear-gradient(90deg, #00d4ff, #00ff87, #00d4ff)',
+              backgroundSize: '200% auto',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+            animate={{ backgroundPosition: ['0% center', '200% center'] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+          >
+            MYRUN
+          </motion.span>
+        </h1>
+      </div>
+      <p className="text-gray-600 text-xs tracking-wider uppercase ml-7">Votre coach running</p>
+    </motion.div>
+  );
+};
+
 // ── Navigation latérale desktop ──────────────────────────────
 const DesktopNav: React.FC = () => {
   const { page, setPage, program } = useAppContext();
 
   const navItems = [
-    { id: 'home',           icon: Home,       label: 'Tableau de bord' },
-    { id: 'my-programs',    icon: ScrollText, label: 'Mon programme'   },
-    { id: 'coach-ia',       icon: Bot,        label: 'Coach IA'        }, // ← NOUVEAU
-    { id: 'vma-calculator', icon: Gauge,      label: 'Calculateur VMA' },
-    { id: 'profile',        icon: User,       label: 'Mon profil'      },
+    { id: 'home',           icon: Home,       label: 'Tableau de bord', color: 'cyan' },
+    { id: 'my-programs',    icon: ScrollText, label: 'Mon programme',   color: 'green' },
+    { id: 'coach-ia',       icon: Bot,        label: 'Coach IA',        color: 'green', badge: 'IA' },
+    { id: 'vma-calculator', icon: Gauge,      label: 'Calculateur VMA', color: 'cyan' },
+    { id: 'profile',        icon: User,       label: 'Mon profil',      color: 'green' },
   ];
 
   const handleNav = (targetPage: Page) => {
@@ -29,39 +104,101 @@ const DesktopNav: React.FC = () => {
   const activePage = page === 'welcome' ? 'home' : page;
 
   return (
-    <nav className="flex flex-col gap-2">
-      {navItems.map(item => {
+    <nav className="flex flex-col gap-1">
+      {navItems.map((item, i) => {
         const isActive =
           activePage === item.id ||
           (item.id === 'my-programs' && page.toString().startsWith('week-'));
 
-        const isCoach = item.id === 'coach-ia';
-
         return (
-          <button
+          <motion.button
             key={item.id}
             onClick={() => handleNav(item.id as Page)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 text-left
-              ${isActive
-                ? isCoach
-                  ? 'bg-green-400/10 text-green-400 border border-green-400/20 shadow-[0_0_10px_rgba(0,255,135,0.1)]'
-                  : 'bg-green-400/10 text-green-400 border border-green-400/20'
-                : isCoach
-                  ? 'text-gray-400 hover:text-green-400 hover:bg-green-400/5'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
+            className="relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 text-left group overflow-hidden"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.4 }}
+            whileHover={{ x: 3 }}
+            whileTap={{ scale: 0.97 }}
           >
-            <item.icon size={18} />
-            {item.label}
-            {isCoach && (
-              <span className="ml-auto text-[9px] font-bold bg-green-400/20 text-green-400 px-1.5 py-0.5 rounded-full">
-                IA
+            {/* Fond actif */}
+            <AnimatePresence>
+              {isActive && (
+                <motion.div
+                  className="absolute inset-0 rounded-xl"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,255,135,0.12))',
+                    border: '1px solid rgba(0,255,135,0.2)',
+                  }}
+                  layoutId="activeNav"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Hover glow */}
+            {!isActive && (
+              <div className="absolute inset-0 rounded-xl bg-white/0 group-hover:bg-white/4 transition-colors duration-200" />
+            )}
+
+            <item.icon
+              size={16}
+              className={`flex-shrink-0 transition-colors duration-200 ${
+                isActive ? 'text-green-400' : 'text-gray-500 group-hover:text-gray-300'
+              }`}
+            />
+            <span className={`transition-colors duration-200 ${
+              isActive ? 'text-white font-semibold' : 'text-gray-500 group-hover:text-gray-300'
+            }`}>
+              {item.label}
+            </span>
+            {item.badge && (
+              <span className="ml-auto text-[9px] font-bold bg-green-400/15 text-green-400 px-1.5 py-0.5 rounded-full border border-green-400/20">
+                {item.badge}
               </span>
             )}
-          </button>
+          </motion.button>
         );
       })}
     </nav>
+  );
+};
+
+// ── Conseil du jour animé ────────────────────────────────────
+const DailyTip: React.FC = () => {
+  const tips = [
+    "L'échauffement est essentiel pour prévenir les blessures.",
+    "Hydratez-vous avant, pendant et après chaque séance.",
+    "Le sommeil est votre meilleur allié pour progresser.",
+    "La régularité prime sur l'intensité pour un débutant.",
+  ];
+  const tip = tips[Math.floor(Date.now() / 86400000) % tips.length];
+
+  return (
+    <motion.div
+      className="mt-auto relative overflow-hidden rounded-2xl p-4"
+      style={{
+        background: 'linear-gradient(135deg, rgba(0,255,135,0.06), rgba(0,212,255,0.04))',
+        border: '1px solid rgba(0,255,135,0.15)',
+      }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5 }}
+    >
+      <motion.div
+        className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-green-400/40 to-transparent"
+        animate={{ x: ['-100%', '100%'] }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+      />
+      <p className="text-green-400 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+        Conseil du jour
+      </p>
+      <p className="text-gray-500 text-xs leading-relaxed">{tip}</p>
+    </motion.div>
   );
 };
 
@@ -94,8 +231,10 @@ const Layout: React.FC<LayoutProps> = ({ children, showBottomNav = true }) => {
           VUE MOBILE (< 768px)
       ═══════════════════════════════════ */}
       <div className="flex md:hidden items-center justify-center min-h-screen p-2">
-        <div className="relative w-full max-w-md h-[95vh] bg-[#111115] rounded-3xl border border-white/10 flex flex-col overflow-hidden">
-          <div className={`absolute top-0 right-2 w-1 h-full bg-[#00ff87]/80 rounded-full z-0 pointer-events-none transition-opacity duration-300 ${isScrolling ? 'opacity-80' : 'opacity-0'}`} />
+        <div className="relative w-full max-w-md h-[95vh] bg-[#0a0a0f] rounded-3xl border border-white/8 flex flex-col overflow-hidden shadow-2xl">
+          {/* Glow mobile */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-green-400/30 to-transparent" />
+          <div className={`absolute top-0 right-2 w-0.5 h-full bg-gradient-to-b from-green-400/0 via-green-400/60 to-green-400/0 rounded-full z-0 pointer-events-none transition-opacity duration-500 ${isScrolling ? 'opacity-100' : 'opacity-0'}`} />
           <main ref={mainRef} className="flex-grow overflow-y-auto p-4 z-10 scrollbar-hide">
             {children}
           </main>
@@ -109,26 +248,19 @@ const Layout: React.FC<LayoutProps> = ({ children, showBottomNav = true }) => {
       <div className="hidden md:flex min-h-screen">
 
         {/* ── Sidebar fixe ── */}
-        <aside className="w-64 bg-[#0d0d12] border-r border-white/10 flex flex-col p-6 fixed h-full z-20">
+        <aside className="w-64 bg-[#080810] border-r border-white/6 flex flex-col p-6 fixed h-full z-20 overflow-hidden">
+          {/* Particules d'ambiance */}
+          <AmbientParticles />
 
-          {/* Logo */}
-          <div className="mb-10">
-            <h1 className="text-3xl font-black tracking-widest">
-              <span className="text-[#00d4ff]" style={{ textShadow: '0 0 8px #00d4ff' }}>MY</span>
-              <span className="text-[#00ff87]" style={{ textShadow: '0 0 8px #00ff87' }}>RUN</span>
-            </h1>
-            <p className="text-gray-500 text-xs mt-1">Votre coach running</p>
-          </div>
+          {/* Glow latéral */}
+          <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-green-400/20 to-transparent" />
+          <div className="absolute top-20 right-0 w-32 h-32 bg-green-400/3 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-0 w-24 h-24 bg-cyan-400/3 rounded-full blur-3xl" />
 
-          {/* Navigation */}
-          <DesktopNav />
-
-          {/* Encart conseil */}
-          <div className="mt-auto">
-            <div className="bg-green-400/10 border border-green-400/20 rounded-2xl p-4">
-              <p className="text-green-400 text-xs font-bold uppercase tracking-widest mb-1">Conseil du jour</p>
-              <p className="text-gray-400 text-xs leading-relaxed">L'échauffement est essentiel pour prévenir les blessures et optimiser vos performances.</p>
-            </div>
+          <div className="relative z-10 flex flex-col h-full">
+            <AnimatedLogo />
+            <DesktopNav />
+            <DailyTip />
           </div>
         </aside>
 
@@ -138,7 +270,6 @@ const Layout: React.FC<LayoutProps> = ({ children, showBottomNav = true }) => {
             {children}
           </div>
         </main>
-
       </div>
     </div>
   );
