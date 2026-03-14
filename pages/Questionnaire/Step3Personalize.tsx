@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { Award, Calendar, Gauge, LoaderCircle, Search, CalendarDays } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Award, Calendar, Gauge, LoaderCircle, Search, CalendarDays, Target, Clock } from 'lucide-react';
 import { Distance, Page, Program } from '../../types';
 import { searchRaces, Race } from '../../services/raceFinder';
 
@@ -24,36 +24,79 @@ interface Step3Props {
 }
 
 const timeObjectives: { [key in Distance]: string[] } = {
-    [Distance.FiveK]: ['Finir', '< 30min', '< 25min', '< 20min'],
-    [Distance.TenK]: ['Finir', '< 1h', '< 50min', '< 45min', '< 40min', '< 35min'],
-    [Distance.HalfMarathon]: ['Finir', '< 2h15', '< 2h', '< 1h45', '< 1h30', '< 1h20'],
-    [Distance.Marathon]: ['Finir', '< 4h30', '< 4h00', '< 3h30', '< 3h00'],
+    [Distance.FiveK]:       ['Finir', '< 30min', '< 25min', '< 20min'],
+    [Distance.TenK]:        ['Finir', '< 1h', '< 50min', '< 45min', '< 40min', '< 35min'],
+    [Distance.HalfMarathon]:['Finir', '< 2h15', '< 2h', '< 1h45', '< 1h30', '< 1h20'],
+    [Distance.Marathon]:    ['Finir', '< 4h30', '< 4h00', '< 3h30', '< 3h00'],
 };
 
 const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+const dayLabels  = ['L', 'Ma', 'Me', 'J', 'V', 'S', 'D'];
 
-// Debounce hook
 const useDebounce = (value: string, delay: number) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
     useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-        return () => {
-            clearTimeout(handler);
-        };
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
     }, [value, delay]);
     return debouncedValue;
 };
 
+// ── Carte glassmorphism section ──────────────────────────────
+const SectionCard: React.FC<{
+    children: React.ReactNode;
+    delay?: number;
+    accent?: string;
+}> = ({ children, delay = 0, accent }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-2xl p-4 overflow-hidden"
+        style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: `1px solid ${accent ? `${accent}20` : 'rgba(255,255,255,0.08)'}`,
+        }}
+    >
+        {accent && (
+            <div
+                className="absolute top-0 left-0 right-0 h-px"
+                style={{ background: `linear-gradient(90deg, transparent, ${accent}40, transparent)` }}
+            />
+        )}
+        {children}
+    </motion.div>
+);
 
-const Step3Personalize: React.FC<Step3Props> = ({ formData, onChange, onSelect, onSubmit, setPage }) => {
-    
-    const today = new Date().toISOString().split("T")[0];
-    const [searchQuery, setSearchQuery] = useState('');
+// ── Label section ────────────────────────────────────────────
+const SectionLabel: React.FC<{ icon: React.ReactNode; label: string; color?: string }> = ({
+    icon, label, color = 'rgba(0,255,135,0.7)'
+}) => (
+    <div className="flex items-center gap-2 mb-3">
+        <div
+            className="w-6 h-6 rounded-lg flex items-center justify-center"
+            style={{ background: `${color}15`, border: `1px solid ${color}30` }}
+        >
+            {icon}
+        </div>
+        <span
+            className="text-[10px] font-bold uppercase tracking-[0.15em]"
+            style={{ color }}
+        >
+            {label}
+        </span>
+    </div>
+);
+
+// ────────────────────────────────────────────────────────────
+const Step3Personalize: React.FC<Step3Props> = ({
+    formData, onChange, onSelect, onSubmit, setPage
+}) => {
+    const today = new Date().toISOString().split('T')[0];
+    const [searchQuery, setSearchQuery]     = useState('');
     const [searchResults, setSearchResults] = useState<Race[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [showResults, setShowResults] = useState(false);
+    const [isSearching, setIsSearching]     = useState(false);
+    const [showResults, setShowResults]     = useState(false);
 
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -72,175 +115,358 @@ const Step3Personalize: React.FC<Step3Props> = ({ formData, onChange, onSelect, 
         }
     }, [debouncedSearchQuery, formData.distance]);
 
-
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        onSelect('raceDate', new Date(e.target.value));
-    };
-
-    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        onSelect('startDate', new Date(e.target.value));
-    };
-    
-    const handleRaceNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const query = e.target.value;
-        setSearchQuery(query);
-        onSelect('raceName', query);
-    };
-    
-    const handleSelectRace = (race: Race) => {
-        onSelect('raceName', race.name);
-        onSelect('raceDate', new Date(race.date));
-        onSelect('raceInfo', { name: race.name, date: race.date, elevation: race.elevation });
-        setShowResults(false);
-        setSearchQuery(race.name);
-    }
-
-    const toggleDay = (day: string) => {
-        const currentDays = formData.trainingDays || [];
-        let newDays;
-        if (currentDays.includes(day)) {
-            newDays = currentDays.filter(d => d !== day);
-        } else {
-            if (currentDays.length >= 6) return; // Max 6 days
-            newDays = [...currentDays, day];
-        }
-        
-        // Sort days
-        newDays.sort((a, b) => daysOfWeek.indexOf(a) - daysOfWeek.indexOf(b));
-        
-        onSelect('trainingDays', newDays);
-        onSelect('sessionsPerWeek', Math.max(2, newDays.length)); // Min 2 sessions
-    };
-
-    // Initialize training days if empty
+    // Init jours si vide
     useEffect(() => {
         if (!formData.trainingDays || formData.trainingDays.length === 0) {
-            // Default based on sessionsPerWeek
-            const defaultDays = formData.sessionsPerWeek === 2 ? ['Mercredi', 'Dimanche'] 
+            const defaultDays =
+                formData.sessionsPerWeek === 2 ? ['Mercredi', 'Dimanche']
                 : formData.sessionsPerWeek === 3 ? ['Mardi', 'Jeudi', 'Dimanche']
                 : ['Mardi', 'Mercredi', 'Vendredi', 'Dimanche'];
             onSelect('trainingDays', defaultDays);
         }
     }, []);
 
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+        onSelect('raceDate', new Date(e.target.value));
+
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+        onSelect('startDate', new Date(e.target.value));
+
+    const handleRaceNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        onSelect('raceName', query);
+    };
+
+    const handleSelectRace = (race: Race) => {
+        onSelect('raceName', race.name);
+        onSelect('raceDate', new Date(race.date));
+        onSelect('raceInfo', { name: race.name, date: race.date, elevation: race.elevation });
+        setShowResults(false);
+        setSearchQuery(race.name);
+    };
+
+    const toggleDay = (day: string) => {
+        const currentDays = formData.trainingDays || [];
+        let newDays: string[];
+        if (currentDays.includes(day)) {
+            newDays = currentDays.filter(d => d !== day);
+        } else {
+            if (currentDays.length >= 6) return;
+            newDays = [...currentDays, day];
+        }
+        newDays.sort((a, b) => daysOfWeek.indexOf(a) - daysOfWeek.indexOf(b));
+        onSelect('trainingDays', newDays);
+        onSelect('sessionsPerWeek', Math.max(2, newDays.length));
+    };
+
+    const objectives = timeObjectives[formData.distance] || [];
+
     return (
-        <div className="flex flex-col h-full">
-            <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-white mb-2">Personnalisez votre programme</h2>
-                <p className="text-gray-400">Quelques détails pour affiner votre plan.</p>
-            </div>
-            <div className="space-y-3 flex-grow overflow-y-auto pr-1">
-                {/* Race Name & Date Cards */}
-                <div className="relative bg-white/5 p-4 rounded-xl border border-white/10 flex items-center gap-4">
-                    <div className="p-3 bg-black/20 rounded-lg">
-                        <Award className="text-orange-400" />
-                    </div>
-                    <div className="flex-1">
-                        <label className="text-xs text-white font-semibold uppercase tracking-wide">Nom de la course (optionnel)</label>
-                        <input type="text" placeholder="Rechercher une course..." value={formData.raceName} onChange={handleRaceNameChange} onFocus={() => setShowResults(true)} className="bg-transparent text-md font-semibold text-white focus:outline-none w-full placeholder-gray-500 mt-1"/>
-                    </div>
-                    {isSearching ? <LoaderCircle size={20} className="animate-spin text-gray-400" /> : <Search size={20} className="text-gray-400"/>}
+        <div className="flex flex-col h-full pt-4">
 
-                    {showResults && (searchResults.length > 0 || isSearching) && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#1a1a20] border border-white/10 rounded-lg z-50 max-h-48 overflow-y-auto shadow-xl">
-                            {isSearching && !searchResults.length && <p className="p-3 text-sm text-gray-400">Recherche...</p>}
-                            {searchResults.map(race => (
-                                <div key={race.id} onClick={() => handleSelectRace(race)} className="p-3 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0">
-                                    <p className="font-semibold text-white">{race.name}</p>
-                                    <p className="text-xs text-gray-400">{new Date(race.date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })} - {race.country}</p>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+            {/* Header */}
+            <motion.div
+                className="text-center mb-6"
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <motion.p
+                    className="text-xs font-bold uppercase tracking-[0.2em] mb-3"
+                    style={{ color: 'rgba(0,255,135,0.7)' }}
+                >
+                    Étape 3 sur 3
+                </motion.p>
+                <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
+                    Personnalisez
+                </h2>
+                <p className="text-gray-500 text-sm">Quelques détails pour affiner votre plan.</p>
+            </motion.div>
 
+            {/* Contenu scrollable */}
+            <div className="flex flex-col gap-3 flex-grow overflow-y-auto pr-0.5 scrollbar-hide">
+
+                {/* ── Nom de la course ── */}
+                <SectionCard delay={0.05} accent="#fb923c">
+                    <SectionLabel
+                        icon={<Award size={12} style={{ color: '#fb923c' }} />}
+                        label="Nom de la course (optionnel)"
+                        color="#fb923c"
+                    />
+                    <div className="relative flex items-center gap-3">
+                        <input
+                            type="text"
+                            placeholder="Rechercher une course..."
+                            value={formData.raceName}
+                            onChange={handleRaceNameChange}
+                            onFocus={() => setShowResults(true)}
+                            className="flex-1 bg-transparent text-sm font-semibold text-white focus:outline-none placeholder-gray-600"
+                        />
+                        {isSearching
+                            ? <LoaderCircle size={15} className="animate-spin text-gray-500 flex-shrink-0" />
+                            : <Search size={15} className="text-gray-600 flex-shrink-0" />
+                        }
+                    </div>
+
+                    {/* Résultats dropdown */}
+                    <AnimatePresence>
+                        {showResults && (searchResults.length > 0 || isSearching) && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -8, scaleY: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                                exit={{ opacity: 0, y: -8, scaleY: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl overflow-hidden"
+                                style={{
+                                    background: 'rgba(12,12,18,0.98)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    backdropFilter: 'blur(20px)',
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                                }}
+                            >
+                                {isSearching && !searchResults.length && (
+                                    <p className="p-3 text-xs text-gray-500">Recherche en cours...</p>
+                                )}
+                                {searchResults.map(race => (
+                                    <motion.div
+                                        key={race.id}
+                                        onClick={() => handleSelectRace(race)}
+                                        whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+                                        className="p-3 cursor-pointer border-b border-white/5 last:border-0"
+                                    >
+                                        <p className="font-semibold text-white text-sm">{race.name}</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            {new Date(race.date).toLocaleDateString('fr-FR', {
+                                                year: 'numeric', month: 'long', day: 'numeric'
+                                            })} · {race.country}
+                                        </p>
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </SectionCard>
+
+                {/* ── Dates ── */}
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col gap-2">
-                        <div className="flex items-center gap-2 mb-1">
-                            <CalendarDays size={16} className="text-orange-400" />
-                            <label className="text-xs text-white font-semibold uppercase tracking-wide">Début du plan</label>
-                        </div>
-                        <input type="date" min={today} value={formData.startDate.toISOString().split('T')[0]} onChange={handleStartDateChange} className="bg-transparent text-sm font-bold text-white focus:outline-none w-full" style={{ colorScheme: 'dark' }} />
-                    </div>
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col gap-2">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Calendar size={16} className="text-orange-400" />
-                            <label className="text-xs text-white font-semibold uppercase tracking-wide">Date course</label>
-                        </div>
-                        <input type="date" min={today} value={formData.raceDate.toISOString().split('T')[0]} onChange={handleDateChange} className="bg-transparent text-sm font-bold text-white focus:outline-none w-full" style={{ colorScheme: 'dark' }} />
-                    </div>
+                    {[
+                        {
+                            label: 'Début du plan',
+                            icon: <CalendarDays size={12} style={{ color: '#00d4ff' }} />,
+                            value: formData.startDate.toISOString().split('T')[0],
+                            onChange: handleStartDateChange,
+                            color: '#00d4ff',
+                        },
+                        {
+                            label: 'Date course',
+                            icon: <Calendar size={12} style={{ color: '#00ff87' }} />,
+                            value: formData.raceDate.toISOString().split('T')[0],
+                            onChange: handleDateChange,
+                            color: '#00ff87',
+                        },
+                    ].map((field, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 + i * 0.05, duration: 0.4 }}
+                            className="relative rounded-2xl p-4 overflow-hidden"
+                            style={{
+                                background: 'rgba(255,255,255,0.03)',
+                                border: `1px solid ${field.color}20`,
+                            }}
+                        >
+                            <div
+                                className="absolute top-0 left-0 right-0 h-px"
+                                style={{ background: `linear-gradient(90deg, transparent, ${field.color}40, transparent)` }}
+                            />
+                            <div className="flex items-center gap-1.5 mb-2">
+                                <div
+                                    className="w-5 h-5 rounded-md flex items-center justify-center"
+                                    style={{ background: `${field.color}15` }}
+                                >
+                                    {field.icon}
+                                </div>
+                                <span
+                                    className="text-[9px] font-bold uppercase tracking-widest"
+                                    style={{ color: field.color }}
+                                >
+                                    {field.label}
+                                </span>
+                            </div>
+                            <input
+                                type="date"
+                                min={today}
+                                value={field.value}
+                                onChange={field.onChange}
+                                className="bg-transparent text-sm font-bold text-white focus:outline-none w-full"
+                                style={{ colorScheme: 'dark' }}
+                            />
+                        </motion.div>
+                    ))}
                 </div>
-                
-                {/* Training Days Selection */}
-                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                    <div className="flex justify-between items-center mb-3">
-                        <label className="text-sm text-white font-semibold">Jours d'entraînement</label>
-                        <span className="text-xs font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-full">
-                            {formData.trainingDays?.length || 0} séances / sem
-                        </span>
+
+                {/* ── Jours d'entraînement ── */}
+                <SectionCard delay={0.15} accent="#a78bfa">
+                    <div className="flex items-center justify-between mb-3">
+                        <SectionLabel
+                            icon={<Target size={12} style={{ color: '#a78bfa' }} />}
+                            label="Jours d'entraînement"
+                            color="#a78bfa"
+                        />
+                        <motion.span
+                            key={formData.trainingDays?.length}
+                            initial={{ scale: 1.2 }}
+                            animate={{ scale: 1 }}
+                            className="text-[10px] font-black px-2.5 py-1 rounded-full"
+                            style={{
+                                background: 'rgba(167,139,250,0.1)',
+                                border: '1px solid rgba(167,139,250,0.25)',
+                                color: '#a78bfa',
+                            }}
+                        >
+                            {formData.trainingDays?.length || 0} / sem
+                        </motion.span>
                     </div>
+
                     <div className="flex justify-between gap-1">
-                        {daysOfWeek.map((day) => {
+                        {daysOfWeek.map((day, i) => {
                             const isSelected = formData.trainingDays?.includes(day);
                             return (
-                                <button
+                                <motion.button
                                     key={day}
                                     onClick={() => toggleDay(day)}
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 ${
-                                        isSelected 
-                                            ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.5)] scale-110' 
-                                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                                    }`}
+                                    whileTap={{ scale: 0.88 }}
+                                    className="flex-1 h-9 rounded-xl text-[11px] font-black transition-all duration-200"
+                                    style={{
+                                        background: isSelected
+                                            ? 'linear-gradient(135deg, #a78bfa, #7c3aed)'
+                                            : 'rgba(255,255,255,0.04)',
+                                        border: isSelected
+                                            ? '1px solid rgba(167,139,250,0.4)'
+                                            : '1px solid rgba(255,255,255,0.07)',
+                                        color: isSelected ? 'white' : 'rgba(255,255,255,0.3)',
+                                        boxShadow: isSelected ? '0 0 12px rgba(167,139,250,0.3)' : 'none',
+                                    }}
                                 >
-                                    {day.substring(0, 1)}
-                                </button>
+                                    {dayLabels[i]}
+                                </motion.button>
                             );
                         })}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2 text-center">Sélectionnez vos jours préférés (min 2)</p>
-                </div>
+                    <p className="text-[10px] text-gray-600 text-center mt-2.5">
+                        Minimum 2 jours · Maximum 6 jours
+                    </p>
+                </SectionCard>
 
-                {/* VMA Card */}
-                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                {/* ── VMA ── */}
+                <SectionCard delay={0.2} accent="#00d4ff">
                     <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-black/20 rounded-lg">
-                                <Gauge className="text-orange-400" />
+                        <div className="flex items-center gap-3">
+                            <div
+                                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{
+                                    background: 'rgba(0,212,255,0.1)',
+                                    border: '1px solid rgba(0,212,255,0.2)',
+                                }}
+                            >
+                                <Gauge size={18} className="text-cyan-400" />
                             </div>
                             <div>
-                                <label className="text-xs text-white font-semibold uppercase tracking-wide block">Votre VMA (km/h)</label>
-                                <input 
-                                    type="number" 
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-400/70 mb-1">
+                                    Votre VMA (km/h)
+                                </p>
+                                <input
+                                    type="number"
                                     step="0.1"
                                     value={formData.vma}
                                     onChange={(e) => onSelect('vma', parseFloat(e.target.value))}
-                                    className="bg-transparent text-xl font-bold text-white focus:outline-none w-24 mt-1"
+                                    className="bg-transparent text-2xl font-black text-white focus:outline-none w-20"
                                 />
                             </div>
                         </div>
-                        <button onClick={() => setPage('vma-calculator')} className="bg-orange-500/20 text-orange-300 text-xs font-bold px-4 py-2 rounded-lg hover:bg-orange-500/40 transition-colors border border-orange-500/30">
+                        <motion.button
+                            onClick={() => setPage('vma-calculator')}
+                            whileTap={{ scale: 0.95 }}
+                            whileHover={{ scale: 1.03 }}
+                            className="px-4 py-2 rounded-xl text-xs font-bold"
+                            style={{
+                                background: 'rgba(0,212,255,0.08)',
+                                border: '1px solid rgba(0,212,255,0.2)',
+                                color: '#00d4ff',
+                            }}
+                        >
                             Calculer
-                        </button>
+                        </motion.button>
                     </div>
-                </div>
+                </SectionCard>
 
-
-                {/* Time Objective Card */}
-                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                    <label className="text-sm text-white font-semibold mb-3 block">Objectif de temps</label>
+                {/* ── Objectif de temps ── */}
+                <SectionCard delay={0.25} accent="#00ff87">
+                    <SectionLabel
+                        icon={<Clock size={12} style={{ color: '#00ff87' }} />}
+                        label="Objectif de temps"
+                        color="#00ff87"
+                    />
                     <div className="grid grid-cols-3 gap-2">
-                        {(timeObjectives[formData.distance] || []).map(obj => (
-                            <button key={obj} onClick={() => onSelect('timeObjective', obj)} className={`p-3 rounded-lg text-xs font-bold transition-all ${formData.timeObjective === obj ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'bg-white/10 text-white hover:bg-white/20'}`}>
-                                {obj}
-                            </button>
-                        ))}
+                        {objectives.map((obj, i) => {
+                            const isSelected = formData.timeObjective === obj;
+                            return (
+                                <motion.button
+                                    key={obj}
+                                    onClick={() => onSelect('timeObjective', obj)}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.3 + i * 0.04 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="py-2.5 rounded-xl text-xs font-bold transition-all duration-200"
+                                    style={{
+                                        background: isSelected
+                                            ? 'linear-gradient(135deg, rgba(0,255,135,0.2), rgba(0,212,255,0.15))'
+                                            : 'rgba(255,255,255,0.04)',
+                                        border: isSelected
+                                            ? '1px solid rgba(0,255,135,0.35)'
+                                            : '1px solid rgba(255,255,255,0.07)',
+                                        color: isSelected ? '#00ff87' : 'rgba(255,255,255,0.5)',
+                                        boxShadow: isSelected ? '0 0 12px rgba(0,255,135,0.15)' : 'none',
+                                    }}
+                                >
+                                    {obj}
+                                </motion.button>
+                            );
+                        })}
                     </div>
-                </div>
+                </SectionCard>
 
             </div>
-            <button onClick={onSubmit} className="w-full bg-[#00ff87] text-[#0a0a0f] font-bold py-4 px-6 rounded-full mt-6 transition-all duration-300 transform hover:scale-105 neon-green-box">
-                Générer mon programme
-            </button>
+
+            {/* ── CTA ── */}
+            <motion.div
+                className="pt-5 pb-1"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+            >
+                <motion.button
+                    onClick={onSubmit}
+                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ scale: 1.01 }}
+                    className="w-full py-4 rounded-2xl font-black text-black text-sm tracking-wide relative overflow-hidden"
+                    style={{
+                        background: 'linear-gradient(135deg, #00ff87, #00d4ff)',
+                        boxShadow: '0 0 35px rgba(0,255,135,0.35)',
+                    }}
+                >
+                    <motion.div
+                        className="absolute inset-0 bg-white/20"
+                        initial={{ x: '-100%' }}
+                        whileHover={{ x: '100%' }}
+                        transition={{ duration: 0.4 }}
+                    />
+                    🚀 Générer mon programme
+                </motion.button>
+            </motion.div>
         </div>
     );
 };
