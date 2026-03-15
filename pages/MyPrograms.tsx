@@ -278,14 +278,39 @@ const MyPrograms: React.FC = () => {
 
         {/* CTA paiement si locked */}
         {!isPaid && program.weeks.some(w => !(w as any).isFree) && (
-          <motion.button
-            onClick={() => setPage('payment')}
+          <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
+            className="rounded-2xl overflow-hidden"
+            style={{ border: '1px solid rgba(0,255,135,0.15)' }}
+          >
+            {/* Affichage prix intensif */}
+            {(program as any).isIntensiveProgram && (program as any).totalPrice && (
+              <div className="px-5 py-3 flex items-center justify-between"
+                style={{ background: 'rgba(0,255,135,0.04)' }}>
+                <div>
+                  <p className="text-xs text-gray-500 mb-0.5">Programme intensif · accès complet</p>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-white font-black text-2xl">5€</p>
+                    <p className="text-gray-500 text-xs line-through">19€</p>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: 'rgba(0,255,135,0.1)', border: '1px solid rgba(0,255,135,0.2)', color: '#00ff87' }}>
+                      -74%
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-gray-600 uppercase tracking-widest">Semaine 1</p>
+                  <p className="text-green-400 text-xs font-bold">Offerte ✓</p>
+                </div>
+              </div>
+            )}
+            <motion.button
+            onClick={() => setPage('payment')}
             whileTap={{ scale: 0.97 }}
             whileHover={{ scale: 1.01 }}
-            className="w-full py-4 rounded-2xl font-bold text-black text-sm relative overflow-hidden"
+            className="w-full py-4 font-bold text-black text-sm relative overflow-hidden"
             style={{
               background: 'linear-gradient(135deg, #00ff87, #00d4ff)',
               boxShadow: '0 0 30px rgba(0,255,135,0.25)',
@@ -299,6 +324,7 @@ const MyPrograms: React.FC = () => {
             />
             🔓 Débloquer tout le programme
           </motion.button>
+          </motion.div>
         )}
       </div>
 
