@@ -786,12 +786,13 @@ export const generateIntensivePlan = (
 
         weeks.push({
             weekNumber: i,
-            title: i === 1 ? '⚡ Démarrage Intensif — Semaine 1'
+            title: i === 1 ? '🎁 Démarrage Intensif — Semaine Offerte !'
                 : isTaper ? '🏁 Affûtage Final'
                 : `⚡ Programme Intensif — Semaine ${i}`,
             sessions,
             totalKm: parseFloat(sessions.reduce((sum, s) => sum + (s.distance || 0), 0).toFixed(1)),
             sessionsCount: sessionsPerWeek,
+            isFree: i === 1,  // ← Semaine 1 gratuite
         });
     }
 
@@ -803,6 +804,7 @@ export const generateIntensivePlan = (
         weeks,
         totalWeeks: weeksUntilRace,
         isIntensiveProgram: true,
+        totalPrice: 5,  // ← 5€ pour tout le programme intensif (semaine 1 offerte)
     };
 };
 
@@ -1028,10 +1030,11 @@ export const generatePlan = (
 
         weeks.push({
             weekNumber: i,
-            title: weekTitle,
+            title: i === 1 ? '🎁 Mise en Route — Semaine Offerte !' : weekTitle,
             sessions,
             totalKm: parseFloat(sessions.reduce((sum, s) => sum + (s.distance || 0), 0).toFixed(1)),
             sessionsCount: sessionsPerWeek,
+            isFree: i === 1,  // ← Semaine 1 toujours gratuite
         });
     }
 
