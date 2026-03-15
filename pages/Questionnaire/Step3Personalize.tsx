@@ -47,12 +47,13 @@ const SectionCard: React.FC<{
     children: React.ReactNode;
     delay?: number;
     accent?: string;
-}> = ({ children, delay = 0, accent }) => (
+    overflow?: boolean;
+}> = ({ children, delay = 0, accent, overflow = false }) => (
     <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="relative rounded-2xl p-4 overflow-hidden"
+        className={`relative rounded-2xl p-4 ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
         style={{
             background: 'rgba(255,255,255,0.03)',
             border: `1px solid ${accent ? `${accent}20` : 'rgba(255,255,255,0.08)'}`,
@@ -60,7 +61,7 @@ const SectionCard: React.FC<{
     >
         {accent && (
             <div
-                className="absolute top-0 left-0 right-0 h-px"
+                className="absolute top-0 left-0 right-0 h-px rounded-t-2xl"
                 style={{ background: `linear-gradient(90deg, transparent, ${accent}40, transparent)` }}
             />
         )}
@@ -188,7 +189,7 @@ const Step3Personalize: React.FC<Step3Props> = ({
             <div className="flex flex-col gap-3 flex-grow overflow-y-auto pr-0.5 scrollbar-hide">
 
                 {/* ── Nom de la course ── */}
-                <SectionCard delay={0.05} accent="#fb923c">
+                <SectionCard delay={0.05} accent="#fb923c" overflow={true}>
                     <SectionLabel
                         icon={<Award size={12} style={{ color: '#fb923c' }} />}
                         label="Nom de la course (optionnel)"
