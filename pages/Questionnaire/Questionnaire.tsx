@@ -122,11 +122,28 @@ const Questionnaire: React.FC = () => {
     // ── Écran de chargement ──────────────────────────────────────
     if (isCreating) {
         return (
-            <div className="futuristic-grid min-h-screen w-full max-w-md mx-auto flex flex-col items-center justify-center">
-                <div className="bg-black/80 p-8 rounded-2xl text-center backdrop-blur-sm border border-white/10">
-                    <LoaderCircle className="mx-auto h-12 w-12 text-cyan-400 animate-spin mb-4" />
-                    <h2 className="text-2xl font-bold mb-2 text-white">Création de votre programme</h2>
-                    <p className="text-white text-opacity-80">Nous préparons votre plan sur mesure...</p>
+            <div className="futuristic-grid min-h-screen w-full flex items-center justify-center p-4">
+                <div className="relative w-full max-w-sm">
+                    {/* Glow ambiant */}
+                    <div className="absolute inset-0 rounded-3xl blur-2xl opacity-30" style={{ background: 'radial-gradient(circle, rgba(0,255,135,0.3), rgba(0,212,255,0.2))' }} />
+                    <div className="relative p-10 rounded-3xl text-center" style={{ background: 'rgba(10,10,18,0.95)', border: '1px solid rgba(0,255,135,0.15)', backdropFilter: 'blur(20px)' }}>
+                        {/* Ligne top */}
+                        <div className="absolute top-0 left-0 right-0 h-px rounded-t-3xl" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,255,135,0.5), transparent)' }} />
+                        {/* Spinner */}
+                        <div className="relative w-16 h-16 mx-auto mb-6">
+                            <div className="absolute inset-0 rounded-full animate-spin" style={{ border: '2px solid transparent', borderTopColor: '#00ff87', borderRightColor: '#00d4ff' }} />
+                            <div className="absolute inset-2 rounded-full animate-ping opacity-20" style={{ background: 'radial-gradient(circle, #00ff87, #00d4ff)' }} />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <LoaderCircle className="h-6 w-6 text-cyan-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.7s' }} />
+                            </div>
+                        </div>
+                        <h2 className="text-xl font-black text-white mb-2 tracking-tight">Création de votre programme</h2>
+                        <p className="text-gray-500 text-sm">Nous préparons votre plan sur mesure...</p>
+                        {/* Barre de progression fictive */}
+                        <div className="mt-6 h-1 bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full animate-pulse" style={{ background: 'linear-gradient(90deg, #00ff87, #00d4ff)', width: '70%', animation: 'progressFill 1.5s ease-in-out infinite alternate' }} />
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -168,8 +185,8 @@ const Questionnaire: React.FC = () => {
     const steps = [1, 2, 3];
 
     return (
-        <div className="futuristic-grid min-h-screen w-full flex items-center justify-center p-2">
-            <div className="relative w-full max-w-md h-[95vh] flex flex-col overflow-hidden">
+        <div className="futuristic-grid min-h-screen w-full flex items-center justify-center p-4 md:p-8">
+            <div className="relative w-full max-w-lg md:max-w-2xl min-h-[85vh] md:min-h-0 flex flex-col" style={{ background: "rgba(10,10,18,0.6)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "1.5rem", backdropFilter: "blur(12px)", padding: "0" }}>
                 <header className="flex items-center p-4 z-10">
                     <button
                         onClick={step === 1 ? () => setPage('welcome') : prevStep}
