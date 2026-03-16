@@ -10,8 +10,8 @@ import { signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } fr
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
+    'https://exvprizxhiaplsrzpbci.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4dnByaXp4aGlhcGxzcnpwYmNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzMzNDYsImV4cCI6MjA4ODcwOTM0Nn0.a_tBO2KX9vHG-m8Z6bEWzM-7Fb4AQiVzJ6aKgaExgr4'
 );
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -290,7 +290,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setUser(newUser);
         if (!firebaseUser) return;
         try {
-            await supabase.from('users').upsert(serializeUserForDB(newUser, firebaseUser.uid));
+            await supabase.from('users').upsert(serializeUserForDB(newUser, firebaseUser.uid), { onConflict: 'id' });
         } catch (error) { console.error('Error updating user:', error); }
     };
 
@@ -323,7 +323,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         try {
             await supabase
                 .from('programs')
-                .upsert(serializeProgramForDB(newProgram, firebaseUser.uid));
+                .upsert(serializeProgramForDB(newProgram, firebaseUser.uid), { onConflict: 'id' });
             await supabase
                 .from('users')
                 .update({ active_program_id: newProgram.id })
