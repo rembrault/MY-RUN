@@ -10,8 +10,8 @@ import { signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } fr
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-    'https://exvprizxhiaplsrzpbci.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4dnByaXp4aGlhcGxzcnpwYmNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzMzNDYsImV4cCI6MjA4ODcwOTM0Nn0.a_tBO2KX9vHG-m8Z6bEWzM-7Fb4AQiVzJ6aKgaExgr4'
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
