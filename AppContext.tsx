@@ -214,6 +214,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                                 const prog = deserializeProgramFromDB(progData);
                                 setProgram(prog);
                                 setIsPaid(progData.is_paid || false);
+                            } else {
+                                // Programme introuvable → reset active_program_id
+                                await supabase
+                                    .from('users')
+                                    .update({ active_program_id: null })
+                                    .eq('id', currentUser.uid);
+                                setProgram(null);
                             }
                         } else {
                             setProgram(null);
@@ -276,7 +283,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setProgramHistory([]);
             setHasOnboarded(false);
             setIsPaid(false);
-            localStorage.clear();
+            // Ne pas effacer tout le localStorage — Firebase Auth en a besoin
+            // Effacer uniquement les données MY RUN
+            localStorage.removeItem('myrun_user');
+            localStorage.removeItem('myrun_program');
+            localStorage.removeItem('myrun_program_history');
+            localStorage.removeItem('myrun_isPaid');
+            localStorage.removeItem('myrun_hasOnboarded');
             setPage('welcome');
         } catch (error) { console.error('Logout failed:', error); }
     };
@@ -315,30 +328,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         await saveProgram(newProgram);
     };
 
-    // saveProgram — sauvegarde un programme déjà généré (INSERT puis UPDATE si conflit)
+    // saveProgram — utilise la fonction RPC Supabase (gère ON CONFLICT nativement)
     const saveProgram = async (newProgram: Program) => {
         setProgram(newProgram);
         setIsPaid(false);
         if (!firebaseUser) return;
         try {
             const serialized = serializeProgramForDB(newProgram, firebaseUser.uid);
-            // Essayer INSERT d'abord
-            const { error: insertError } = await supabase
-                .from('programs')
-                .insert(serialized);
-            // Si programme existant (duplicate key), faire UPDATE
-            if (insertError) {
-                await supabase
-                    .from('programs')
-                    .update(serialized)
-                    .eq('id', newProgram.id)
-                    .eq('user_id', firebaseUser.uid);
-            }
-            // Mettre a jour active_program_id dans users
-            await supabase
-                .from('users')
-                .update({ active_program_id: newProgram.id })
-                .eq('id', firebaseUser.uid);
+            const { error } = await supabase.rpc('save_program', {
+                program_data: serialized
+            });
+            if (error) console.error('RPC save_program error:', error);
         } catch (error) { console.error('Error saving program:', error); }
     };
 
