@@ -214,6 +214,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                                 const prog = deserializeProgramFromDB(progData);
                                 setProgram(prog);
                                 setIsPaid(progData.is_paid || false);
+                            } else {
+                                // Programme introuvable → reset active_program_id
+                                await supabase
+                                    .from('users')
+                                    .update({ active_program_id: null })
+                                    .eq('id', currentUser.uid);
+                                setProgram(null);
                             }
                         } else {
                             setProgram(null);
@@ -276,7 +283,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setProgramHistory([]);
             setHasOnboarded(false);
             setIsPaid(false);
-            localStorage.clear();
+            // Ne pas effacer tout le localStorage — Firebase Auth en a besoin
+            // Effacer uniquement les données MY RUN
+            localStorage.removeItem('myrun_user');
+            localStorage.removeItem('myrun_program');
+            localStorage.removeItem('myrun_program_history');
+            localStorage.removeItem('myrun_isPaid');
+            localStorage.removeItem('myrun_hasOnboarded');
             setPage('welcome');
         } catch (error) { console.error('Logout failed:', error); }
     };
