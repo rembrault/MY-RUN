@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Zap, RefreshCw, ChevronDown } from 'lucide-react';
+import { Send, Bot, User, RefreshCw } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAppContext } from '../context/AppContext';
 
-// ─── Types ───────────────────────────────────────────────────────────
 interface Message {
     id: string;
     role: 'user' | 'assistant';
@@ -12,7 +11,6 @@ interface Message {
     timestamp: Date;
 }
 
-// ─── Questions de démarrage rapide ───────────────────────────────────
 const QUICK_QUESTIONS = [
     "Comment bien récupérer après une séance difficile ?",
     "Quelle alimentation avant ma course ?",
@@ -21,7 +19,6 @@ const QUICK_QUESTIONS = [
     "Comment gérer mon allure en compétition ?",
 ];
 
-// ─── Composant Message ────────────────────────────────────────────────
 const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
     const isUser = message.role === 'user';
     return (
@@ -31,7 +28,6 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
             transition={{ duration: 0.3 }}
             className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
         >
-            {/* Avatar */}
             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
                 isUser
                     ? 'bg-cyan-500/20 border border-cyan-500/30'
@@ -42,14 +38,11 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
                     : <Bot size={14} className="text-green-400" />
                 }
             </div>
-
-            {/* Bulle */}
             <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                 isUser
                     ? 'bg-cyan-500/10 border border-cyan-500/20 text-white rounded-tr-sm'
                     : 'bg-white/5 border border-white/10 text-gray-200 rounded-tl-sm'
             }`}>
-                {/* Formatage du texte (gras, listes) */}
                 {message.content.split('\n').map((line, i) => {
                     if (line.startsWith('**') && line.endsWith('**')) {
                         return <p key={i} className="font-bold text-white mt-2 mb-1">{line.replace(/\*\*/g, '')}</p>;
@@ -65,7 +58,6 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
     );
 };
 
-// ─── Composant principal ──────────────────────────────────────────────
 const CoachIA: React.FC = () => {
     const { user, program, isPaid } = useAppContext();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -75,27 +67,23 @@ const CoachIA: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
-    // Message de bienvenue au démarrage
     useEffect(() => {
-        const welcomeMsg: Message = {
+        setMessages([{
             id: 'welcome',
             role: 'assistant',
-            content: `Bonjour ${user.name || 'sportif'} ! 👋\n\nJe suis ton coach IA MY RUN. Je connais ton profil et ${program ? `ton programme ${program.distance} (${program.totalWeeks} semaines)` : 'tes objectifs running'}.\n\nPose-moi toutes tes questions sur l'entraînement, la récupération, la nutrition ou ta prochaine course. Je suis là pour t'aider ! 🏃`,
+            content: `Bonjour ${user.name || 'sportif'} ! 👋\n\nJe suis ton coach MY RUN. Je connais ton profil et ${program ? `ton programme ${program.distance} (${program.totalWeeks} semaines)` : 'tes objectifs running'}.\n\nPose-moi toutes tes questions sur l'entraînement, la récupération, la nutrition ou ta prochaine course ! 🏃`,
             timestamp: new Date(),
-        };
-        setMessages([welcomeMsg]);
+        }]);
     }, []);
 
-    // Auto-scroll vers le bas
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // ── Construction du contexte utilisateur pour Gemini ──
     const buildSystemPrompt = (): string => {
         const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
-        let context = `Tu es "MY RUN Coach", un entraîneur running expert et bienveillant intégré dans l'application MY RUN. 
+        let context = `Tu es "MY RUN Coach", un entraîneur running expert et bienveillant intégré dans l'application MY RUN.
 Tu communiques en français, de façon encourageante, précise et professionnelle.
 Tu donnes des conseils concrets, pratiques et adaptés au profil de l'utilisateur.
 Tu ne fais jamais plus de 3-4 paragraphes par réponse. Tu utilises des emojis avec modération.
@@ -109,42 +97,33 @@ PROFIL DE L'UTILISATEUR :
 - Taille : ${user.height ? `${user.height} cm` : 'Non renseignée'}`;
 
         if (program) {
-            const completedSessions = program.weeks
-                .flatMap(w => w.sessions)
-                .filter(s => s.completed && s.type !== 'Repos').length;
-            const totalSessions = program.weeks
-                .flatMap(w => w.sessions)
-                .filter(s => s.type !== 'Repos').length;
+            const completedSessions = program.weeks.flatMap(w => w.sessions).filter(s => s.completed && s.type !== 'Repos').length;
+            const totalSessions = program.weeks.flatMap(w => w.sessions).filter(s => s.type !== 'Repos').length;
             const progressPct = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
-
-            const daysUntilRace = Math.max(0, Math.ceil(
-                (new Date(program.raceDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-            ));
+            const daysUntilRace = Math.max(0, Math.ceil((new Date(program.raceDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
 
             context += `\n\nPROGRAMME EN COURS :
 - Distance : ${program.distance}
 - Course cible : ${program.raceName}
-- Objectif de temps : ${program.timeObjective}
-- Nombre de semaines total : ${program.totalWeeks}
+- Objectif : ${program.timeObjective}
+- Semaines total : ${program.totalWeeks}
 - Jours avant la course : ${daysUntilRace}
-- Séances par semaine : ${program.sessionsPerWeek}
-- Progression : ${progressPct}% (${completedSessions}/${totalSessions} séances complétées)
-- Programme débloqué : ${isPaid ? 'Oui' : 'Non (semaine 1 uniquement)'}`;
+- Séances/semaine : ${program.sessionsPerWeek}
+- Progression : ${progressPct}% (${completedSessions}/${totalSessions} séances)
+- Débloqué : ${isPaid ? 'Oui' : 'Non (semaine 1 uniquement)'}`;
         } else {
-            context += `\n\nPROGRAMME : Aucun programme actif pour le moment.`;
+            context += `\n\nPROGRAMME : Aucun programme actif.`;
         }
 
-        context += `\n\nRÈGLES IMPORTANTES :
-- Utilise le prénom de l'utilisateur de temps en temps pour personnaliser
-- Si l'utilisateur mentionne une douleur, recommande toujours de consulter un médecin ou kiné
-- Ne génère jamais de nouveaux plans d'entraînement complets (l'app le fait)
-- Reste dans le domaine du running, fitness et récupération
-- Si tu ne sais pas, dis-le honnêtement plutôt que d'inventer`;
+        context += `\n\nRÈGLES :
+- Utilise le prénom de temps en temps
+- Douleur → recommande médecin ou kiné
+- Ne génère pas de plans complets (l'app le fait)
+- Reste dans le domaine running/fitness/récupération`;
 
         return context;
     };
 
-    // ── Envoi du message à Gemini ──
     const sendMessage = async (userText: string) => {
         if (!userText.trim() || isLoading) return;
 
@@ -161,62 +140,55 @@ PROFIL DE L'UTILISATEUR :
         setIsLoading(true);
 
         try {
-            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-            if (!apiKey) throw new Error('Clé API Gemini manquante');
+            const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+            if (!apiKey) throw new Error('Clé API OpenAI manquante');
 
-            // Construction de l'historique pour Gemini
             const history = messages
                 .filter(m => m.id !== 'welcome')
-                .map(m => ({
-                    role: m.role === 'user' ? 'user' : 'model',
-                    parts: [{ text: m.content }]
-                }));
+                .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        system_instruction: {
-                            parts: [{ text: buildSystemPrompt() }]
-                        },
-                        contents: [
-                            ...history,
-                            { role: 'user', parts: [{ text: userText.trim() }] }
-                        ],
-                        generationConfig: {
-                            temperature: 0.7,
-                            maxOutputTokens: 600,
-                        }
-                    })
-                }
-            );
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: buildSystemPrompt() },
+                        ...history,
+                        { role: 'user', content: userText.trim() },
+                    ],
+                    max_tokens: 600,
+                    temperature: 0.7,
+                }),
+            });
 
-            if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(`Erreur ${response.status}: ${err.error?.message || 'Erreur inconnue'}`);
+            }
 
             const data = await response.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            const text = data.choices?.[0]?.message?.content;
+            if (!text) throw new Error('Réponse vide');
 
-            if (!text) throw new Error('Réponse vide de Gemini');
-
-            const assistantMessage: Message = {
+            setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
                 content: text,
                 timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, assistantMessage]);
+            }]);
 
         } catch (error: any) {
-            console.error('Erreur Gemini:', error);
-            const errorMessage: Message = {
+            console.error('Erreur OpenAI:', error);
+            setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: `Désolé, je rencontre une difficulté technique en ce moment. 😕\n\nVérifie ta connexion internet et réessaie dans quelques secondes.`,
+                content: `Désolé, je rencontre une difficulté technique. 😕\n\nVérifie ta connexion et réessaie dans quelques secondes.`,
                 timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, errorMessage]);
+            }]);
         } finally {
             setIsLoading(false);
         }
@@ -230,13 +202,12 @@ PROFIL DE L'UTILISATEUR :
     };
 
     const resetConversation = () => {
-        const welcomeMsg: Message = {
+        setMessages([{
             id: 'welcome-' + Date.now(),
             role: 'assistant',
-            content: `Nouvelle conversation démarrée ! 👋\n\nQue puis-je faire pour toi, ${user.name || 'sportif'} ?`,
+            content: `Nouvelle conversation ! 👋\n\nQue puis-je faire pour toi, ${user.name || 'sportif'} ?`,
             timestamp: new Date(),
-        };
-        setMessages([welcomeMsg]);
+        }]);
         setShowQuick(true);
     };
 
@@ -244,7 +215,7 @@ PROFIL DE L'UTILISATEUR :
         <Layout showBottomNav={true}>
             <div className="flex flex-col h-full">
 
-                {/* ── Header ── */}
+                {/* Header */}
                 <header className="flex items-center justify-between mb-4 flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="bg-green-500/10 p-2 rounded-full border border-green-500/20">
@@ -254,32 +225,26 @@ PROFIL DE L'UTILISATEUR :
                             <h1 className="text-lg font-bold text-white">Coach IA</h1>
                             <p className="text-xs text-green-400 flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                                En ligne • Propulsé par Gemini
+                                En ligne • Propulsé par ChatGPT
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={resetConversation}
                         className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full border border-white/10 transition-colors"
-                        title="Nouvelle conversation"
                     >
                         <RefreshCw size={16} />
                     </button>
                 </header>
 
-                {/* ── Zone de messages ── */}
+                {/* Messages */}
                 <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-1">
                     {messages.map(message => (
                         <MessageBubble key={message.id} message={message} />
                     ))}
 
-                    {/* Indicateur de frappe */}
                     {isLoading && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="flex gap-3"
-                        >
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3">
                             <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500/20 border border-green-500/30 flex-shrink-0">
                                 <Bot size={14} className="text-green-400" />
                             </div>
@@ -297,11 +262,10 @@ PROFIL DE L'UTILISATEUR :
                             </div>
                         </motion.div>
                     )}
-
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* ── Questions rapides ── */}
+                {/* Questions rapides */}
                 <AnimatePresence>
                     {showQuick && messages.length <= 1 && (
                         <motion.div
@@ -326,7 +290,7 @@ PROFIL DE L'UTILISATEUR :
                     )}
                 </AnimatePresence>
 
-                {/* ── Zone de saisie ── */}
+                {/* Zone de saisie */}
                 <div className="flex-shrink-0 flex gap-2 items-end bg-white/5 border border-white/10 rounded-2xl p-2">
                     <textarea
                         ref={inputRef}
