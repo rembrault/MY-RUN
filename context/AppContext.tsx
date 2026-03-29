@@ -277,7 +277,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const login = async () => {
         try {
-            await supabase.auth.signInWithOAuth({ provider: 'google' });
+            await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin },
+            });
         } catch (error) { console.error('Login failed:', error); }
     };
 

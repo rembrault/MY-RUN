@@ -67,7 +67,10 @@ const Auth: React.FC = () => {
     const handleGoogle = async () => {
         setIsLoading(true); setError('');
         try {
-            const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin },
+            });
             if (error) setError(getAuthError(error.message));
         } catch {
             setError('Une erreur est survenue. Réessayez.');
