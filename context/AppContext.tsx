@@ -1,18 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { AppContextType, Page, Program, User, Level } from '../types';
 import { generatePlan } from '../services/planGenerator';
-
-// ── Firebase Auth (connexion uniquement) ─────────────────────
-import { auth, googleProvider } from '../firebase';
-import { signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-
-// ── Supabase (toutes les données) ────────────────────────────
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-    'https://exvprizxhiaplsrzpbci.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4dnByaXp4aGlhcGxzcnpwYmNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzMzNDYsImV4cCI6MjA4ODcwOTM0Nn0.a_tBO2KX9vHG-m8Z6bEWzM-7Fb4AQiVzJ6aKgaExgr4'
-);
+import { supabase } from '../supabase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -104,7 +94,7 @@ const serializeUserForDB = (u: User, uid: string) => ({
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+    const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const [user, setUser] = useState<User>(() => {
@@ -151,100 +141,123 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [viewedProgram, setViewedProgram] = useState<Program | null>(null);
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // LISTENER AUTH — Firebase détecte connexion → charge Supabase
+    // LISTENER AUTH — Supabase détecte connexion → charge données
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            setFirebaseUser(currentUser);
-            setIsLoading(true);
+    const loadUserData = async (supabaseUser: SupabaseUser) => {
+        try {
+            // 1. Charger profil utilisateur
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', supabaseUser.id)
+                .single();
 
-            if (currentUser) {
-                try {
-                    // 1. Charger profil utilisateur
-                    const { data: userData, error: userError } = await supabase
-                        .from('users')
-                        .select('*')
-                        .eq('id', currentUser.uid)
-                        .single();
-
-                    if (userError?.code === 'PGRST116') {
-                        // Nouvel utilisateur → créer dans Supabase
-                        await supabase.from('users').insert({
-                            id:            currentUser.uid,
-                            email:         currentUser.email || '',
-                            name:          currentUser.displayName || '',
-                            avatar:        currentUser.photoURL || 'https://picsum.photos/200',
-                            has_onboarded: false,
-                            is_paid:       false,
-                            level:         'Débutant',
-                            vma:           0,
-                        });
-                        setUser({
-                            ...initialUser,
-                            email:  currentUser.email || '',
-                            name:   currentUser.displayName || '',
-                            avatar: currentUser.photoURL || 'https://picsum.photos/200',
-                        });
-                        setHasOnboarded(false);
-
-                    } else if (userData) {
-                        // Utilisateur existant → hydrater
-                        setUser({
-                            name:      userData.name || '',
-                            email:     userData.email || '',
-                            avatar:    userData.avatar || 'https://picsum.photos/200',
-                            weight:    userData.weight || 0,
-                            height:    userData.height || 0,
-                            birthDate: userData.birth_date || '',
-                            level:     userData.level || Level.Beginner,
-                            vma:       userData.vma || 0,
-                        });
-                        setHasOnboarded(userData.has_onboarded || false);
-                        setIsPaid(userData.is_paid || false);
-
-                        // 2. Programme actif
-                        if (userData.active_program_id) {
-                            const { data: progData } = await supabase
-                                .from('programs')
-                                .select('*')
-                                .eq('id', userData.active_program_id)
-                                .single();
-                            if (progData) {
-                                const prog = deserializeProgramFromDB(progData);
-                                setProgram(prog);
-                                setIsPaid(progData.is_paid || false);
-                            }
-                        } else {
-                            setProgram(null);
-                        }
-
-                        // 3. Historique programmes archivés
-                        const { data: historyData } = await supabase
-                            .from('programs')
-                            .select('*')
-                            .eq('user_id', currentUser.uid)
-                            .not('archived_date', 'is', null)
-                            .order('archived_date', { ascending: false });
-
-                        if (historyData) {
-                            setProgramHistory(historyData.map(deserializeProgramFromDB));
-                        }
-                    }
-                } catch (error) {
-                    console.error('Supabase load error:', error);
-                }
-            } else {
-                setProgram(null);
-                setProgramHistory([]);
+            if (userError?.code === 'PGRST116') {
+                // Nouvel utilisateur → créer dans Supabase
+                await supabase.from('users').insert({
+                    id:            supabaseUser.id,
+                    email:         supabaseUser.email || '',
+                    name:          supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || '',
+                    avatar:        supabaseUser.user_metadata?.avatar_url || 'https://picsum.photos/200',
+                    has_onboarded: false,
+                    is_paid:       false,
+                    level:         'Débutant',
+                    vma:           0,
+                });
+                setUser({
+                    ...initialUser,
+                    email:  supabaseUser.email || '',
+                    name:   supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || '',
+                    avatar: supabaseUser.user_metadata?.avatar_url || 'https://picsum.photos/200',
+                });
                 setHasOnboarded(false);
-                setIsPaid(false);
-            }
 
-            setIsLoading(false);
+            } else if (userData) {
+                // Utilisateur existant → hydrater
+                setUser({
+                    name:      userData.name || '',
+                    email:     userData.email || '',
+                    avatar:    userData.avatar || 'https://picsum.photos/200',
+                    weight:    userData.weight || 0,
+                    height:    userData.height || 0,
+                    birthDate: userData.birth_date || '',
+                    level:     userData.level || Level.Beginner,
+                    vma:       userData.vma || 0,
+                });
+                setHasOnboarded(userData.has_onboarded || false);
+                setIsPaid(userData.is_paid || false);
+
+                // 2. Programme actif
+                if (userData.active_program_id) {
+                    const { data: progData } = await supabase
+                        .from('programs')
+                        .select('*')
+                        .eq('id', userData.active_program_id)
+                        .single();
+                    if (progData) {
+                        const prog = deserializeProgramFromDB(progData);
+                        setProgram(prog);
+                        setIsPaid(progData.is_paid || false);
+                    }
+                } else {
+                    setProgram(null);
+                }
+
+                // 3. Historique programmes archivés
+                const { data: historyData } = await supabase
+                    .from('programs')
+                    .select('*')
+                    .eq('user_id', supabaseUser.id)
+                    .not('archived_date', 'is', null)
+                    .order('archived_date', { ascending: false });
+
+                if (historyData) {
+                    setProgramHistory(historyData.map(deserializeProgramFromDB));
+                }
+            }
+        } catch (error) {
+            console.error('Supabase load error:', error);
+        }
+    };
+
+    useEffect(() => {
+        // Vérifier la session existante au chargement
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            const currentUser = session?.user ?? null;
+            setAuthUser(currentUser);
+            if (currentUser) {
+                loadUserData(currentUser).finally(() => setIsLoading(false));
+            } else {
+                setIsLoading(false);
+            }
         });
 
-        return () => unsubscribe();
+        // Écouter les changements d'auth (connexion, déconnexion, refresh token)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            async (event, session) => {
+                const currentUser = session?.user ?? null;
+                setAuthUser(currentUser);
+
+                if (event === 'SIGNED_IN' && currentUser) {
+                    setIsLoading(true);
+                    await loadUserData(currentUser);
+                    setIsLoading(false);
+                }
+
+                if (event === 'SIGNED_OUT') {
+                    setUser(initialUser);
+                    setProgram(null);
+                    setProgramHistory([]);
+                    setHasOnboarded(false);
+                    setIsPaid(false);
+                    localStorage.clear();
+                    setPage('welcome');
+                }
+            }
+        );
+
+        return () => subscription.unsubscribe();
     }, []);
 
     // ── Sync localStorage (cache offline) ─────────────────────
@@ -263,21 +276,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     const login = async () => {
-        try { await signInWithPopup(auth, googleProvider); }
-        catch (error) { console.error('Login failed:', error); }
+        try {
+            await supabase.auth.signInWithOAuth({ provider: 'google' });
+        } catch (error) { console.error('Login failed:', error); }
     };
 
     const logout = async () => {
         try {
-            await signOut(auth);
-            setFirebaseUser(null);
-            setUser(initialUser);
-            setProgram(null);
-            setProgramHistory([]);
-            setHasOnboarded(false);
-            setIsPaid(false);
-            localStorage.clear();
-            setPage('welcome');
+            await supabase.auth.signOut();
+            // Le listener onAuthStateChange gère le nettoyage
         } catch (error) { console.error('Logout failed:', error); }
     };
 
@@ -288,18 +295,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const updateUser = async (userData: Partial<User>) => {
         const newUser = { ...user, ...userData };
         setUser(newUser);
-        if (!firebaseUser) return;
+        if (!authUser) return;
         try {
-            await supabase.from('users').upsert(serializeUserForDB(newUser, firebaseUser.uid), { onConflict: 'id' });
+            await supabase.from('users').upsert(serializeUserForDB(newUser, authUser.id), { onConflict: 'id' });
         } catch (error) { console.error('Error updating user:', error); }
     };
 
     const completeOnboarding = async () => {
         setHasOnboarded(true);
         setPage('welcome');
-        if (!firebaseUser) return;
+        if (!authUser) return;
         try {
-            await supabase.from('users').update({ has_onboarded: true }).eq('id', firebaseUser.uid);
+            await supabase.from('users').update({ has_onboarded: true }).eq('id', authUser.id);
         } catch (error) { console.error('Error completing onboarding:', error); }
     };
 
@@ -307,7 +314,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // PROGRAMS
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    // createProgram — génère + sauvegarde (rétrocompat)
     const createProgram = async (
         settings: Omit<Program, 'id' | 'weeks' | 'totalWeeks'> & { vma?: number; raceInfo?: Program['raceInfo'] }
     ) => {
@@ -315,26 +321,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         await saveProgram(newProgram);
     };
 
-    // saveProgram — sauvegarde un programme déjà généré
     const saveProgram = async (newProgram: Program) => {
         setProgram(newProgram);
         setIsPaid(false);
-        if (!firebaseUser) return;
+        if (!authUser) return;
         try {
             await supabase
                 .from('programs')
-                .upsert(serializeProgramForDB(newProgram, firebaseUser.uid), { onConflict: 'id' });
+                .upsert(serializeProgramForDB(newProgram, authUser.id), { onConflict: 'id' });
             await supabase
                 .from('users')
                 .update({ active_program_id: newProgram.id })
-                .eq('id', firebaseUser.uid);
+                .eq('id', authUser.id);
         } catch (error) { console.error('Error saving program:', error); }
     };
 
-    // updateProgram — met à jour les séances (feedback, completion)
     const updateProgram = async (updatedProgram: Program) => {
         setProgram(updatedProgram);
-        if (!firebaseUser) return;
+        if (!authUser) return;
         try {
             await supabase
                 .from('programs')
@@ -343,28 +347,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     presentation_shown: !!(updatedProgram as any).presentationShown,
                 })
                 .eq('id', updatedProgram.id)
-                .eq('user_id', firebaseUser.uid);
+                .eq('user_id', authUser.id);
         } catch (error) { console.error('Error updating program:', error); }
     };
 
-    // deleteProgram — archive le programme actif
     const deleteProgram = async () => {
         if (!program) return;
         const archivedDate = new Date().toISOString();
         const archivedProgram: Program = { ...program, archivedDate };
         setProgramHistory(prev => [archivedProgram, ...prev]);
 
-        if (firebaseUser) {
+        if (authUser) {
             try {
                 await supabase
                     .from('programs')
                     .update({ archived_date: archivedDate })
                     .eq('id', program.id)
-                    .eq('user_id', firebaseUser.uid);
+                    .eq('user_id', authUser.id);
                 await supabase
                     .from('users')
                     .update({ active_program_id: null })
-                    .eq('id', firebaseUser.uid);
+                    .eq('id', authUser.id);
             } catch (error) { console.error('Error archiving program:', error); }
         }
 
@@ -374,52 +377,49 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         localStorage.removeItem('myrun_isPaid');
     };
 
-    // clearHistory — supprime tous les programmes archivés
     const clearHistory = async () => {
         setProgramHistory([]);
         localStorage.removeItem('myrun_program_history');
-        if (!firebaseUser) return;
+        if (!authUser) return;
         try {
             await supabase
                 .from('programs')
                 .delete()
-                .eq('user_id', firebaseUser.uid)
+                .eq('user_id', authUser.id)
                 .not('archived_date', 'is', null);
         } catch (error) { console.error('Error clearing history:', error); }
     };
 
-    // completePayment — marque le programme et l'utilisateur comme payés
     const completePayment = async () => {
         setIsPaid(true);
         setPage('home');
-        if (!firebaseUser || !program) return;
+        if (!authUser || !program) return;
         try {
             await supabase
                 .from('programs')
                 .update({ is_paid: true })
                 .eq('id', program.id)
-                .eq('user_id', firebaseUser.uid);
+                .eq('user_id', authUser.id);
             await supabase
                 .from('users')
                 .update({ is_paid: true })
-                .eq('id', firebaseUser.uid);
+                .eq('id', authUser.id);
         } catch (error) { console.error('Error completing payment:', error); }
     };
 
-    // adaptProgramIntensity — réduit la VMA suite à un feedback "difficile"
     const adaptProgramIntensity = async (reductionPercentage: number) => {
         if (!program || !program.vma) return;
         const newVMA = parseFloat((program.vma * (1 - reductionPercentage / 100)).toFixed(1));
         const updatedProgram = { ...program, vma: newVMA };
         setProgram(updatedProgram);
         await updateUser({ vma: newVMA });
-        if (!firebaseUser) return;
+        if (!authUser) return;
         try {
             await supabase
                 .from('programs')
                 .update({ vma: newVMA, weeks: updatedProgram.weeks })
                 .eq('id', program.id)
-                .eq('user_id', firebaseUser.uid);
+                .eq('user_id', authUser.id);
         } catch (error) { console.error('Error adapting intensity:', error); }
     };
 
@@ -449,7 +449,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         login,
         logout,
         isLoading,
-        isAuthenticated: !!firebaseUser,
+        isAuthenticated: !!authUser,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

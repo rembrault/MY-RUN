@@ -140,21 +140,15 @@ PROFIL DE L'UTILISATEUR :
         setIsLoading(true);
 
         try {
-            const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-            if (!apiKey) throw new Error('Clé API OpenAI manquante');
-
             const history = messages
                 .filter(m => m.id !== 'welcome')
                 .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            // Appel via le proxy serveur — la clé API reste côté serveur
+            const response = await fetch('/api/openai', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'gpt-4o-mini',
                     messages: [
                         { role: 'system', content: buildSystemPrompt() },
                         ...history,
@@ -167,7 +161,7 @@ PROFIL DE L'UTILISATEUR :
 
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
-                throw new Error(`Erreur ${response.status}: ${err.error?.message || 'Erreur inconnue'}`);
+                throw new Error(`Erreur ${response.status}: ${(err as any).error || 'Erreur inconnue'}`);
             }
 
             const data = await response.json();

@@ -21,7 +21,7 @@ import PageTransition from './components/PageTransition';
 const PageRenderer: React.FC = () => {
     const { page, program, hasOnboarded, isAuthenticated, isLoading } = useAppContext();
 
-    // Spinner pendant vérification Firebase
+    // Spinner pendant vérification auth
     if (isLoading) {
         return (
             <div className="futuristic-grid min-h-screen flex items-center justify-center">

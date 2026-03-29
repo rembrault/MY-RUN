@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Chrome, Zap } from 'lucide-react';
-import { auth, googleProvider } from '../firebase';
-import {
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signInWithPopup,
-    sendPasswordResetEmail
-} from 'firebase/auth';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Zap } from 'lucide-react';
+import { supabase } from '../supabase';
 
 // ─── Types ───────────────────────────────────────────────
 type AuthMode = 'login' | 'register' | 'reset';
@@ -23,18 +17,15 @@ const Auth: React.FC = () => {
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
 
-    // ── Traduit les erreurs Firebase en français ──
-    const getFirebaseError = (code: string): string => {
-        switch (code) {
-            case 'auth/user-not-found':       return 'Aucun compte trouvé avec cet email.';
-            case 'auth/wrong-password':        return 'Mot de passe incorrect.';
-            case 'auth/email-already-in-use':  return 'Un compte existe déjà avec cet email.';
-            case 'auth/weak-password':         return 'Le mot de passe doit faire au moins 6 caractères.';
-            case 'auth/invalid-email':         return 'Adresse email invalide.';
-            case 'auth/too-many-requests':     return 'Trop de tentatives. Réessayez plus tard.';
-            case 'auth/invalid-credential':    return 'Email ou mot de passe incorrect.';
-            default:                           return 'Une erreur est survenue. Réessayez.';
-        }
+    // ── Traduit les erreurs Supabase en français ──
+    const getAuthError = (message: string): string => {
+        if (message.includes('Invalid login credentials'))  return 'Email ou mot de passe incorrect.';
+        if (message.includes('User already registered'))    return 'Un compte existe déjà avec cet email.';
+        if (message.includes('Password should be'))         return 'Le mot de passe doit faire au moins 6 caractères.';
+        if (message.includes('invalid email'))              return 'Adresse email invalide.';
+        if (message.includes('rate limit'))                 return 'Trop de tentatives. Réessayez plus tard.';
+        if (message.includes('Email not confirmed'))        return 'Veuillez confirmer votre email avant de vous connecter.';
+        return 'Une erreur est survenue. Réessayez.';
     };
 
     // ── Connexion email/mot de passe ──
@@ -42,10 +33,11 @@ const Auth: React.FC = () => {
         if (!email || !password) { setError('Remplissez tous les champs.'); return; }
         setIsLoading(true); setError('');
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            // Firebase onAuthStateChanged dans AppContext prend le relais
-        } catch (e: any) {
-            setError(getFirebaseError(e.code));
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) setError(getAuthError(error.message));
+            // Supabase onAuthStateChange dans AppContext prend le relais
+        } catch {
+            setError('Une erreur est survenue. Réessayez.');
         } finally {
             setIsLoading(false);
         }
@@ -58,9 +50,14 @@ const Auth: React.FC = () => {
         if (password.length < 6) { setError('Le mot de passe doit faire au moins 6 caractères.'); return; }
         setIsLoading(true); setError('');
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
-        } catch (e: any) {
-            setError(getFirebaseError(e.code));
+            const { error } = await supabase.auth.signUp({ email, password });
+            if (error) {
+                setError(getAuthError(error.message));
+            } else {
+                setSuccessMsg('Compte créé ! Vérifiez votre email pour confirmer votre inscription.');
+            }
+        } catch {
+            setError('Une erreur est survenue. Réessayez.');
         } finally {
             setIsLoading(false);
         }
@@ -70,9 +67,10 @@ const Auth: React.FC = () => {
     const handleGoogle = async () => {
         setIsLoading(true); setError('');
         try {
-            await signInWithPopup(auth, googleProvider);
-        } catch (e: any) {
-            setError(getFirebaseError(e.code));
+            const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+            if (error) setError(getAuthError(error.message));
+        } catch {
+            setError('Une erreur est survenue. Réessayez.');
         } finally {
             setIsLoading(false);
         }
@@ -83,10 +81,14 @@ const Auth: React.FC = () => {
         if (!email) { setError('Entrez votre adresse email.'); return; }
         setIsLoading(true); setError('');
         try {
-            await sendPasswordResetEmail(auth, email);
-            setSuccessMsg('Un email de réinitialisation a été envoyé !');
-        } catch (e: any) {
-            setError(getFirebaseError(e.code));
+            const { error } = await supabase.auth.resetPasswordForEmail(email);
+            if (error) {
+                setError(getAuthError(error.message));
+            } else {
+                setSuccessMsg('Un email de réinitialisation a été envoyé !');
+            }
+        } catch {
+            setError('Une erreur est survenue. Réessayez.');
         } finally {
             setIsLoading(false);
         }
