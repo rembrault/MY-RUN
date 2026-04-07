@@ -215,6 +215,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 if (historyData) {
                     setProgramHistory(historyData.map(deserializeProgramFromDB));
                 }
+
+                // Rediriger vers home si l'utilisateur a un programme et a terminé l'onboarding
+                if (userData.has_onboarded && userData.active_program_id) {
+                    setPage('home');
+                }
             }
         } catch (error) {
             console.error('Supabase load error:', error);
@@ -222,6 +227,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     useEffect(() => {
+        let initialLoadDone = false;
+
         // Timeout de sécurité : si Supabase ne répond pas en 8s, on arrête le loading
         const safetyTimeout = setTimeout(() => {
             setIsLoading(false);
@@ -233,12 +240,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const currentUser = session?.user ?? null;
             setAuthUser(currentUser);
             if (currentUser) {
-                loadUserData(currentUser).finally(() => setIsLoading(false));
+                loadUserData(currentUser).finally(() => {
+                    initialLoadDone = true;
+                    setIsLoading(false);
+                });
             } else {
+                initialLoadDone = true;
                 setIsLoading(false);
             }
         }).catch(() => {
             clearTimeout(safetyTimeout);
+            initialLoadDone = true;
             setIsLoading(false);
         });
 
@@ -249,12 +261,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 setAuthUser(currentUser);
 
                 if (event === 'SIGNED_IN' && currentUser) {
+                    // Éviter le double chargement si getSession() a déjà chargé les données
+                    if (initialLoadDone) return;
                     setIsLoading(true);
                     await loadUserData(currentUser);
+                    initialLoadDone = true;
                     setIsLoading(false);
                 }
 
                 if (event === 'SIGNED_OUT') {
+                    initialLoadDone = false;
                     setUser(initialUser);
                     setProgram(null);
                     setProgramHistory([]);
