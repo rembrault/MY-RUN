@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { AppProvider, useAppContext } from './context/AppContext';
 import Auth from './pages/Auth';
@@ -13,23 +13,33 @@ import CalendarExport from './pages/CalendarExport';
 import VMACalculator from './pages/VMACalculator';
 import ProgramView from './pages/ProgramView';
 import MyPrograms from './pages/MyPrograms';
-import CoachIA from './pages/CoachIA';          // ← NOUVEAU
+import CoachIA from './pages/CoachIA';
 import PageTransition from './components/PageTransition';
-
-// rebuild
+import SplashScreen from './components/SplashScreen';
 
 const PageRenderer: React.FC = () => {
     const { page, program, hasOnboarded, isAuthenticated, isLoading } = useAppContext();
+    const [showSplash, setShowSplash] = useState(true);
+    const [minTimePassed, setMinTimePassed] = useState(false);
 
-    // Spinner pendant vérification auth
-    if (isLoading) {
+    // Durée minimale du splash : 3 secondes
+    useEffect(() => {
+        const timer = setTimeout(() => setMinTimePassed(true), 3000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Ferme le splash quand le temps min est écoulé ET le chargement terminé
+    useEffect(() => {
+        if (minTimePassed && !isLoading) {
+            setShowSplash(false);
+        }
+    }, [minTimePassed, isLoading]);
+
+    if (showSplash) {
         return (
-            <div className="futuristic-grid min-h-screen flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin" />
-                    <p className="text-gray-500 text-sm">Chargement...</p>
-                </div>
-            </div>
+            <AnimatePresence mode="wait">
+                <SplashScreen onComplete={() => setShowSplash(false)} />
+            </AnimatePresence>
         );
     }
 

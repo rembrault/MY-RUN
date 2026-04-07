@@ -222,8 +222,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     useEffect(() => {
+        // Timeout de sécurité : si Supabase ne répond pas en 8s, on arrête le loading
+        const safetyTimeout = setTimeout(() => {
+            setIsLoading(false);
+        }, 8000);
+
         // Vérifier la session existante au chargement
         supabase.auth.getSession().then(({ data: { session } }) => {
+            clearTimeout(safetyTimeout);
             const currentUser = session?.user ?? null;
             setAuthUser(currentUser);
             if (currentUser) {
@@ -231,6 +237,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             } else {
                 setIsLoading(false);
             }
+        }).catch(() => {
+            clearTimeout(safetyTimeout);
+            setIsLoading(false);
         });
 
         // Écouter les changements d'auth (connexion, déconnexion, refresh token)
@@ -257,7 +266,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             }
         );
 
-        return () => subscription.unsubscribe();
+        return () => {
+            clearTimeout(safetyTimeout);
+            subscription.unsubscribe();
+        };
     }, []);
 
     // ── Sync localStorage (cache offline) ─────────────────────
