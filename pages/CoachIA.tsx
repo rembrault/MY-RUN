@@ -1,14 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, RefreshCw } from 'lucide-react';
+import { Send, Bot, User, RefreshCw, MessageSquare, ChevronLeft, Trash2 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAppContext } from '../context/AppContext';
+import { supabase } from '../supabase';
 
 interface Message {
     id: string;
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
+}
+
+interface Conversation {
+    id: string;
+    title: string;
+    messages: Message[];
+    created_at: string;
+    updated_at: string;
 }
 
 const QUICK_QUESTIONS = [
@@ -59,22 +68,107 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
 };
 
 const CoachIA: React.FC = () => {
-    const { user, program, isPaid } = useAppContext();
+    const { user, program, isPaid, authUser } = useAppContext();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showQuick, setShowQuick] = useState(true);
+    const [conversationId, setConversationId] = useState<string | null>(null);
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [showHistory, setShowHistory] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const welcomeMessage = useCallback((): Message => ({
+        id: 'welcome-' + Date.now(),
+        role: 'assistant',
+        content: `Bonjour ${user.name || 'sportif'} ! 👋\n\nJe suis ton coach MY RUN. Je connais ton profil et ${program ? `ton programme ${program.distance} (${program.totalWeeks} semaines)` : 'tes objectifs running'}.\n\nPose-moi toutes tes questions sur l'entraînement, la récupération, la nutrition ou ta prochaine course ! 🏃`,
+        timestamp: new Date(),
+    }), [user.name, program]);
+
+    // ── Charger la dernière conversation ou créer un welcome ──
     useEffect(() => {
-        setMessages([{
-            id: 'welcome',
-            role: 'assistant',
-            content: `Bonjour ${user.name || 'sportif'} ! 👋\n\nJe suis ton coach MY RUN. Je connais ton profil et ${program ? `ton programme ${program.distance} (${program.totalWeeks} semaines)` : 'tes objectifs running'}.\n\nPose-moi toutes tes questions sur l'entraînement, la récupération, la nutrition ou ta prochaine course ! 🏃`,
-            timestamp: new Date(),
-        }]);
-    }, []);
+        if (!authUser) {
+            setMessages([welcomeMessage()]);
+            return;
+        }
+        (async () => {
+            const { data } = await supabase
+                .from('coach_conversations')
+                .select('*')
+                .eq('user_id', authUser.id)
+                .order('updated_at', { ascending: false })
+                .limit(1);
+
+            if (data && data.length > 0) {
+                const conv = data[0];
+                const msgs = (conv.messages as any[]).map((m: any) => ({
+                    ...m,
+                    timestamp: new Date(m.timestamp),
+                }));
+                setConversationId(conv.id);
+                setMessages(msgs);
+                setShowQuick(msgs.filter((m: Message) => m.role === 'user').length === 0);
+            } else {
+                setMessages([welcomeMessage()]);
+            }
+        })();
+    }, [authUser]);
+
+    // ── Charger la liste des conversations pour l'historique ──
+    const loadConversationsList = useCallback(async () => {
+        if (!authUser) return;
+        const { data } = await supabase
+            .from('coach_conversations')
+            .select('id, title, created_at, updated_at, messages')
+            .eq('user_id', authUser.id)
+            .order('updated_at', { ascending: false })
+            .limit(20);
+        if (data) {
+            setConversations(data.map(c => ({
+                ...c,
+                messages: (c.messages as any[]).map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })),
+            })));
+        }
+    }, [authUser]);
+
+    // ── Sauvegarder les messages avec debounce ──
+    const saveMessages = useCallback(async (msgs: Message[], convId: string | null) => {
+        if (!authUser || msgs.length <= 1) return;
+
+        const serialized = msgs.map(m => ({
+            ...m,
+            timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp,
+        }));
+
+        // Générer un titre à partir du 1er message utilisateur
+        const firstUserMsg = msgs.find(m => m.role === 'user');
+        const title = firstUserMsg
+            ? firstUserMsg.content.slice(0, 60) + (firstUserMsg.content.length > 60 ? '…' : '')
+            : 'Nouvelle conversation';
+
+        if (convId) {
+            await supabase
+                .from('coach_conversations')
+                .update({ messages: serialized, title })
+                .eq('id', convId)
+                .eq('user_id', authUser.id);
+        } else {
+            const { data } = await supabase
+                .from('coach_conversations')
+                .insert({
+                    user_id: authUser.id,
+                    title,
+                    messages: serialized,
+                })
+                .select('id')
+                .single();
+            if (data) {
+                setConversationId(data.id);
+            }
+        }
+    }, [authUser]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -141,7 +235,7 @@ PROFIL DE L'UTILISATEUR :
 
         try {
             const history = messages
-                .filter(m => m.id !== 'welcome')
+                .filter(m => !m.id.startsWith('welcome'))
                 .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
             // Appel via le proxy serveur — la clé API reste côté serveur
@@ -168,12 +262,20 @@ PROFIL DE L'UTILISATEUR :
             const text = data.choices?.[0]?.message?.content;
             if (!text) throw new Error('Réponse vide');
 
-            setMessages(prev => [...prev, {
+            const assistantMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
                 content: text,
                 timestamp: new Date(),
-            }]);
+            };
+
+            setMessages(prev => {
+                const updated = [...prev, assistantMessage];
+                // Sauvegarder avec debounce pour éviter les appels multiples
+                if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+                saveTimeoutRef.current = setTimeout(() => saveMessages(updated, conversationId), 500);
+                return updated;
+            });
 
         } catch (error: any) {
             console.error('Erreur OpenAI:', error);
@@ -196,6 +298,11 @@ PROFIL DE L'UTILISATEUR :
     };
 
     const resetConversation = () => {
+        // Sauvegarder la conversation en cours avant de reset
+        if (messages.length > 1 && conversationId) {
+            saveMessages(messages, conversationId);
+        }
+        setConversationId(null);
         setMessages([{
             id: 'welcome-' + Date.now(),
             role: 'assistant',
@@ -205,9 +312,30 @@ PROFIL DE L'UTILISATEUR :
         setShowQuick(true);
     };
 
+    const loadConversation = (conv: Conversation) => {
+        setConversationId(conv.id);
+        setMessages(conv.messages);
+        setShowQuick(conv.messages.filter(m => m.role === 'user').length === 0);
+        setShowHistory(false);
+    };
+
+    const deleteConversation = async (convId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!authUser) return;
+        await supabase
+            .from('coach_conversations')
+            .delete()
+            .eq('id', convId)
+            .eq('user_id', authUser.id);
+        setConversations(prev => prev.filter(c => c.id !== convId));
+        if (conversationId === convId) {
+            resetConversation();
+        }
+    };
+
     return (
         <Layout showBottomNav={true}>
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full relative">
 
                 {/* Header */}
                 <header className="flex items-center justify-between mb-4 flex-shrink-0">
@@ -223,13 +351,88 @@ PROFIL DE L'UTILISATEUR :
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={resetConversation}
-                        className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full border border-white/10 transition-colors"
-                    >
-                        <RefreshCw size={16} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => { loadConversationsList(); setShowHistory(true); }}
+                            className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full border border-white/10 transition-colors"
+                            title="Historique"
+                        >
+                            <MessageSquare size={16} />
+                        </button>
+                        <button
+                            onClick={resetConversation}
+                            className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full border border-white/10 transition-colors"
+                            title="Nouvelle conversation"
+                        >
+                            <RefreshCw size={16} />
+                        </button>
+                    </div>
                 </header>
+
+                {/* Panneau historique des conversations */}
+                <AnimatePresence>
+                    {showHistory && (
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="absolute inset-0 z-50 bg-[#0a0a0f]/95 backdrop-blur-sm flex flex-col p-4"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <button
+                                    onClick={() => setShowHistory(false)}
+                                    className="p-2 text-gray-400 hover:text-white"
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <h2 className="text-lg font-bold text-white">Conversations</h2>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto space-y-2">
+                                {conversations.length === 0 ? (
+                                    <p className="text-gray-500 text-sm text-center mt-8">Aucune conversation sauvegardée</p>
+                                ) : (
+                                    conversations.map(conv => (
+                                        <button
+                                            key={conv.id}
+                                            onClick={() => loadConversation(conv)}
+                                            className={`w-full text-left p-3 rounded-xl border transition-all ${
+                                                conv.id === conversationId
+                                                    ? 'bg-green-500/10 border-green-500/30'
+                                                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm text-white font-medium truncate">{conv.title}</p>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        {new Date(conv.updated_at).toLocaleDateString('fr-FR', {
+                                                            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                                        })}
+                                                        {' • '}{conv.messages.filter(m => m.role === 'user').length} messages
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={(e) => deleteConversation(conv.id, e)}
+                                                    className="p-1.5 text-gray-600 hover:text-red-400 transition-colors flex-shrink-0"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => { resetConversation(); setShowHistory(false); }}
+                                className="mt-3 w-full py-3 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 text-sm font-medium hover:bg-green-500/20 transition-all"
+                            >
+                                + Nouvelle conversation
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-1">
