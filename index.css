@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/* ── Font ── */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0a0a0f;
+  overscroll-behavior-y: none;
+}
+
+/* ── Neon effects ── */
+.neon-cyan-text {
+  text-shadow: 0 0 2px #00d4ff, 0 0 5px #00d4ff;
+}
+.neon-green-text {
+  text-shadow: 0 0 2px #00ff87, 0 0 5px #00ff87;
+}
+.neon-green-box {
+  box-shadow: 0 0 5px #00ff87, 0 0 10px #00ff87, 0 0 15px #00ff87;
+}
+
+/* ── Futuristic grid background ── */
+.futuristic-grid {
+  background-color: #0a0a0f;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Custom range input ── */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+input[type=range]:hover {
+  opacity: 1;
+}
+input[type=range].orange-slider {
+  background: #f97316;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid #0a0a0f;
+}
+input[type=range]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid #0a0a0f;
+}
+
+/* ── Hide scrollbar ── */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
