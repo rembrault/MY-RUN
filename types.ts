@@ -95,7 +95,7 @@ export interface User {
 
 export type Page = 'welcome' | 'new-program' | 'home' | 'my-programs' | 'profile' | 'edit-profile' | 'payment' | 'calendar' | 'vma-calculator' | 'coach-ia' | `week-${number}` | 'program-view';
 
-export interface AppContextType { 
+export interface AppContextType {
     saveProgram: (program: Program) => Promise<void>;
     user: User;
     program: Program | null;
@@ -104,6 +104,7 @@ export interface AppContextType {
     hasOnboarded: boolean;
     programHistory: Program[];
     viewedProgram: Program | null;
+    authUser: any | null;
     setPage: (page: Page) => void;
     updateUser: (userData: Partial<User>) => Promise<void>;
     createProgram: (settings: Omit<Program, 'id' | 'weeks' | 'totalWeeks'> & { vma?: number, raceInfo?: Program['raceInfo'] }) => Promise<void>;

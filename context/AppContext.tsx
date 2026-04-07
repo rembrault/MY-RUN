@@ -272,6 +272,42 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         };
     }, []);
 
+    // ── Détection retour Stripe Checkout ───────────────────────
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('payment') === 'success' && authUser) {
+            // Marquer le programme comme payé dans Supabase
+            const programId = params.get('program_id');
+            if (programId) {
+                supabase
+                    .from('programs')
+                    .update({ is_paid: true })
+                    .eq('id', programId)
+                    .eq('user_id', authUser.id)
+                    .then(() => {
+                        setIsPaid(true);
+                        setPage('home');
+                    });
+
+                supabase
+                    .from('payments')
+                    .insert({
+                        user_id: authUser.id,
+                        program_id: programId,
+                        amount: 0, // Le montant réel est dans Stripe
+                        status: 'completed',
+                        stripe_session_id: params.get('session_id') || 'checkout_redirect',
+                    })
+                    .then(() => {});
+            }
+            // Nettoyer l'URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+        if (params.get('payment') === 'cancelled') {
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, [authUser]);
+
     // ── Sync localStorage (cache offline) ─────────────────────
     useEffect(() => { localStorage.setItem('myrun_user', JSON.stringify(user)); }, [user]);
     useEffect(() => {
@@ -465,6 +501,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         logout,
         isLoading,
         isAuthenticated: !!authUser,
+        authUser,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -4,11 +4,23 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['icon-192.svg', 'icon-512.svg', 'apple-touch-icon.svg'],
       devOptions: {
         enabled: true
       },
@@ -23,19 +35,19 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'https://via.placeholder.com/192.png/0a0a0f/00ff87?text=MY+RUN',
+            src: '/icon-192.svg',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/svg+xml'
           },
           {
-            src: 'https://via.placeholder.com/512.png/0a0a0f/00ff87?text=MY+RUN',
+            src: '/icon-512.svg',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/svg+xml'
           },
           {
-            src: 'https://via.placeholder.com/512.png/0a0a0f/00ff87?text=MY+RUN',
+            src: '/icon-512.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           }
         ]
