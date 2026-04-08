@@ -35,6 +35,12 @@ const PageRenderer: React.FC = () => {
         }
     }, [minTimePassed, isLoading]);
 
+    // Fallback absolu : force la fermeture du splash après 6 secondes max
+    useEffect(() => {
+        const fallback = setTimeout(() => setShowSplash(false), 6000);
+        return () => clearTimeout(fallback);
+    }, []);
+
     if (showSplash) {
         return (
             <AnimatePresence mode="wait">

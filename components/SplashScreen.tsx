@@ -8,7 +8,7 @@ interface SplashScreenProps {
 const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
     return (
         <motion.div
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
             style={{ backgroundColor: '#0a0a0f' }}
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
@@ -46,62 +46,32 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
 
             {/* Logo MY RUN */}
             <div className="relative flex flex-col items-center">
-                {/* Icone coureur stylisée */}
+                <motion.img
+                    src="/logo-myrun.png"
+                    alt="MY RUN"
+                    className="h-40"
+                    style={{
+                        filter: 'drop-shadow(0 0 10px rgba(0,255,135,0.35)) drop-shadow(0 0 25px rgba(0,212,255,0.2))',
+                    }}
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4, duration: 0.6, type: 'spring', stiffness: 200 }}
+                />
+
+                {/* Reflet néon sous le logo */}
                 <motion.div
-                    className="mb-4"
-                    initial={{ y: -30, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3, duration: 0.6, ease: 'easeOut' }}
-                >
-                    <svg
-                        width="56"
-                        height="56"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#00ff87"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        {/* Runner silhouette */}
-                        <circle cx="13" cy="4" r="2" />
-                        <path d="M7 21l3-7 2.5 2 4.5-6" />
-                        <path d="M16 11l-2.5 3L11 12l-3 7" />
-                        <path d="M21 17l-3-1" />
-                    </svg>
-                </motion.div>
-
-                {/* Texte MY */}
-                <motion.span
-                    className="text-7xl font-black tracking-tighter leading-none"
+                    className="absolute -bottom-3 w-40 h-6 rounded-full blur-xl"
                     style={{
-                        color: '#00d4ff',
-                        textShadow: '0 0 4px #00d4ff, 0 0 12px #00d4ff',
+                        background: 'radial-gradient(ellipse, rgba(0,255,135,0.25) 0%, rgba(0,212,255,0.15) 40%, transparent 70%)',
                     }}
-                    initial={{ x: -40, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.5, duration: 0.5, ease: 'easeOut' }}
-                >
-                    MY
-                </motion.span>
-
-                {/* Texte RUN */}
-                <motion.span
-                    className="text-7xl font-black tracking-tighter leading-none"
-                    style={{
-                        color: '#00ff87',
-                        textShadow: '0 0 4px #00ff87, 0 0 12px #00ff87',
-                    }}
-                    initial={{ x: 40, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.7, duration: 0.5, ease: 'easeOut' }}
-                >
-                    RUN
-                </motion.span>
+                    initial={{ opacity: 0, scaleX: 0.5 }}
+                    animate={{ opacity: [0, 0.6, 0.35, 0.6], scaleX: [0.5, 1.1, 0.9, 1.05] }}
+                    transition={{ delay: 0.8, duration: 2, repeat: Infinity, repeatType: 'reverse' }}
+                />
 
                 {/* Ligne de séparation animée */}
                 <motion.div
-                    className="mt-4 h-0.5 rounded-full"
+                    className="mt-5 h-0.5 rounded-full"
                     style={{
                         background: 'linear-gradient(90deg, #00d4ff, #00ff87)',
                         boxShadow: '0 0 8px rgba(0,255,135,0.5)',
@@ -118,34 +88,80 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.3, duration: 0.5 }}
                 >
-                    Train smarter. Run faster.
+                    Entraînez-vous plus intelligemment.
                 </motion.p>
             </div>
 
-            {/* Indicateur de chargement en bas */}
+            {/* ══ Animation coureur 🏃 qui court sur la piste ══ */}
             <motion.div
-                className="absolute bottom-16 flex flex-col items-center gap-3"
+                className="absolute bottom-24 w-full flex items-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.3 }}
+            >
+                {/* Piste / ligne de course */}
+                <motion.div
+                    className="absolute w-full h-px"
+                    style={{
+                        background: 'linear-gradient(90deg, transparent 0%, rgba(0,255,135,0.3) 20%, rgba(0,212,255,0.3) 80%, transparent 100%)',
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.3, duration: 0.5 }}
+                />
+
+                {/* Coureur emoji qui traverse l'écran */}
+                <motion.div
+                    className="text-3xl"
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(0,255,135,0.6))' }}
+                    initial={{ x: '-10vw', opacity: 0 }}
+                    animate={{
+                        x: ['0vw', '110vw'],
+                        opacity: [0, 1, 1, 1, 0],
+                    }}
+                    transition={{
+                        delay: 1.4,
+                        duration: 2.2,
+                        ease: 'easeInOut',
+                        opacity: { delay: 1.3, duration: 2.3, times: [0, 0.05, 0.5, 0.9, 1] },
+                    }}
+                >
+                    🏃
+                </motion.div>
+
+                {/* Traînée lumineuse derrière le coureur */}
+                <motion.div
+                    className="absolute h-0.5 rounded-full"
+                    style={{
+                        background: 'linear-gradient(90deg, transparent, #00ff87, #00d4ff)',
+                        boxShadow: '0 0 10px rgba(0,255,135,0.5)',
+                    }}
+                    initial={{ x: '-10vw', width: 0, opacity: 0 }}
+                    animate={{
+                        x: ['0vw', '105vw'],
+                        width: [0, 60, 40, 0],
+                        opacity: [0, 0.8, 0.8, 0],
+                    }}
+                    transition={{
+                        delay: 1.4,
+                        duration: 2.2,
+                        ease: 'easeInOut',
+                    }}
+                />
+            </motion.div>
+
+            {/* Texte de chargement en bas */}
+            <motion.div
+                className="absolute bottom-12 flex flex-col items-center gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.5, duration: 0.4 }}
             >
-                {/* Barre de progression */}
-                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
-                    <motion.div
-                        className="h-full rounded-full"
-                        style={{
-                            background: 'linear-gradient(90deg, #00d4ff, #00ff87)',
-                        }}
-                        initial={{ width: '0%' }}
-                        animate={{ width: '100%' }}
-                        transition={{ delay: 1.5, duration: 1.2, ease: 'easeInOut' }}
-                    />
-                </div>
                 <motion.span
-                    className="text-xs text-gray-500"
+                    className="text-xs text-gray-500 tracking-wider"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0, 1, 0.5, 1] }}
-                    transition={{ delay: 1.5, duration: 1.5, repeat: 0 }}
+                    transition={{ delay: 1.5, duration: 1.5 }}
                 >
                     Chargement...
                 </motion.span>

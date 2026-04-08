@@ -54,32 +54,15 @@ const AnimatedLogo: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <div className="flex items-center gap-1 mb-1">
-        <motion.div
-          className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-400 to-green-400 flex items-center justify-center"
-          animate={{ rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <Zap size={12} className="text-black" />
-        </motion.div>
-        <h1 className="text-2xl font-black tracking-widest">
-          <motion.span
-            className="inline-block"
-            style={{
-              background: 'linear-gradient(90deg, #00d4ff, #00ff87, #00d4ff)',
-              backgroundSize: '200% auto',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-            animate={{ backgroundPosition: ['0% center', '200% center'] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-          >
-            MYRUN
-          </motion.span>
-        </h1>
+      <div className="flex items-center gap-2 mb-1">
+        <img
+            src="/logo-myrun.png"
+            alt="MY RUN"
+            className="h-10"
+            style={{ filter: 'drop-shadow(0 0 4px rgba(0,255,135,0.25)) drop-shadow(0 0 10px rgba(0,212,255,0.12))' }}
+        />
       </div>
-      <p className="text-gray-600 text-xs tracking-wider uppercase ml-7">Votre coach running</p>
+      <p className="text-gray-600 text-xs tracking-wider uppercase ml-1">Votre coach running</p>
     </motion.div>
   );
 };

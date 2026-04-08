@@ -229,10 +229,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     useEffect(() => {
         let initialLoadDone = false;
 
-        // Timeout de sécurité : si Supabase ne répond pas en 8s, on arrête le loading
+        // Timeout de sécurité : si Supabase ne répond pas en 4s, on arrête le loading
         const safetyTimeout = setTimeout(() => {
             setIsLoading(false);
-        }, 8000);
+        }, 4000);
 
         // Vérifier la session existante au chargement
         supabase.auth.getSession().then(({ data: { session } }) => {

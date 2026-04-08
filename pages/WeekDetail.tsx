@@ -459,7 +459,10 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
                             {block.duration && <p className="text-xs text-gray-400 font-semibold">~ {block.duration} min</p>}
                           </div>
                       </div>
-                      <p className="text-sm text-gray-300 mt-1 ml-1">{block.details}</p>
+                      <p className="text-sm text-gray-300 mt-2 ml-1 whitespace-pre-line leading-relaxed">{block.details}</p>
+                      {block.hrZone && (
+                          <p className="text-xs text-cyan-400/70 mt-2 ml-1 font-mono">❤️ {block.hrZone}</p>
+                      )}
                   </div>
               ))}
           </div>

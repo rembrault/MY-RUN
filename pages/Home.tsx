@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Calendar, TrendingUp, ChevronRight, Target, Flame } from 'lucide-react';
+import { Play, Calendar, TrendingUp, ChevronRight, Target, Flame, Zap, Bot, BarChart3, ClipboardList } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import Layout from '../components/Layout';
 import NotificationBanner from '../components/NotificationBanner';
@@ -73,24 +73,84 @@ const GlassCard: React.FC<{
 );
 
 // ─────────────────────────────────────────────────────────────
-// PAGE WELCOME (sans programme)
+// PAGE WELCOME (sans programme) — avec notice d'accueil
 // ─────────────────────────────────────────────────────────────
+
+const StepCard: React.FC<{
+  step: number;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: string;
+  delay: number;
+}> = ({ step, icon, title, description, color, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ delay, duration: 0.4 }}
+    className="flex items-start gap-4"
+  >
+    <div className="relative flex-shrink-0">
+      <div
+        className="w-11 h-11 rounded-2xl flex items-center justify-center"
+        style={{
+          background: `${color}15`,
+          border: `1px solid ${color}30`,
+        }}
+      >
+        {icon}
+      </div>
+      <span
+        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+        style={{ background: color, color: '#0a0a0f' }}
+      >
+        {step}
+      </span>
+    </div>
+    <div className="flex-1 pt-1">
+      <p className="text-white font-bold text-sm">{title}</p>
+      <p className="text-gray-500 text-xs leading-relaxed mt-0.5">{description}</p>
+    </div>
+  </motion.div>
+);
+
+const FeaturePill: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  color: string;
+  delay: number;
+}> = ({ icon, label, color, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay, duration: 0.3 }}
+    className="flex items-center gap-2 px-3 py-2 rounded-xl"
+    style={{
+      background: `${color}08`,
+      border: `1px solid ${color}20`,
+    }}
+  >
+    {icon}
+    <span className="text-xs font-semibold text-gray-300">{label}</span>
+  </motion.div>
+);
+
 const WelcomeView: React.FC = () => {
   const { setPage, user } = useAppContext();
 
   return (
     <Layout>
-      <div className="flex flex-col gap-6 py-4">
-        {/* Hero */}
+      <div className="flex flex-col gap-5 py-2">
+
+        {/* Hero compact */}
         <motion.div
-          className="text-center py-8"
+          className="text-center pt-4 pb-2"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Badge */}
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-6"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-4"
             style={{
               background: 'rgba(0,255,135,0.08)',
               border: '1px solid rgba(0,255,135,0.2)',
@@ -101,66 +161,92 @@ const WelcomeView: React.FC = () => {
             transition={{ delay: 0.2 }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            Programmes sur mesure
+            Votre coach running personnel
           </motion.div>
 
-          {/* Logo animé */}
-          <motion.h1
-            className="text-6xl font-black tracking-widest mb-4"
+          <motion.img
+            src="/logo-myrun.png"
+            alt="MY RUN"
+            className="h-28 mx-auto mb-3"
+            style={{ filter: 'drop-shadow(0 0 8px rgba(0,255,135,0.3)) drop-shadow(0 0 20px rgba(0,212,255,0.15))' }}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
-          >
-            <span
-              style={{
-                background: 'linear-gradient(90deg, #00d4ff, #00ff87, #00d4ff)',
-                backgroundSize: '200% auto',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              MYRUN
-            </span>
-          </motion.h1>
+          />
 
           <motion.p
-            className="text-gray-400 text-base leading-relaxed max-w-sm mx-auto"
+            className="text-gray-400 text-sm leading-relaxed max-w-xs mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            Plans d'entraînement sur mesure pour le{' '}
-            <span className="text-cyan-400 font-semibold">10km</span>,{' '}
-            <span className="text-green-400 font-semibold">semi</span> et{' '}
-            <span className="text-orange-400 font-semibold">marathon</span>.
+            Préparez votre{' '}
+            <span className="text-cyan-400 font-semibold">5km</span>,{' '}
+            <span className="text-green-400 font-semibold">10km</span>,{' '}
+            <span className="text-orange-400 font-semibold">semi</span> ou{' '}
+            <span className="text-red-400 font-semibold">marathon</span>{' '}
+            avec un plan 100% personnalisé.
           </motion.p>
         </motion.div>
 
-        {/* Feature card */}
-        <GlassCard delay={0.4} glow="rgba(0,255,135,0.08)">
-          <div className="p-5 flex items-start gap-4">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)' }}
-            >
-              <Target size={18} className="text-cyan-400" />
-            </div>
-            <div>
-              <p className="text-white font-semibold text-sm mb-1">Conçu par des experts</p>
-              <p className="text-gray-500 text-xs leading-relaxed">
-                Programmes basés sur votre VMA personnelle, adaptés semaine après semaine.
-              </p>
+        {/* ── COMMENT ÇA MARCHE ── */}
+        <GlassCard delay={0.4} glow="rgba(0,212,255,0.06)">
+          <div className="p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-400/70 mb-4">
+              Comment ça marche
+            </p>
+            <div className="flex flex-col gap-5">
+              <StepCard
+                step={1}
+                icon={<ClipboardList size={18} className="text-cyan-400" />}
+                title="Créez votre programme"
+                description="Choisissez votre distance, votre niveau et votre date de course. On génère un plan adapté à votre VMA."
+                color="#00d4ff"
+                delay={0.5}
+              />
+              <StepCard
+                step={2}
+                icon={<Zap size={18} className="text-green-400" />}
+                title="Suivez vos séances"
+                description="Chaque semaine : échauffement, corps de séance et retour au calme détaillés. Cochez au fur et à mesure."
+                color="#00ff87"
+                delay={0.6}
+              />
+              <StepCard
+                step={3}
+                icon={<Target size={18} className="text-orange-400" />}
+                title="Atteignez votre objectif"
+                description="Le plan s'adapte à vos sensations. Suivez votre progression jusqu'au jour J."
+                color="#fb923c"
+                delay={0.7}
+              />
             </div>
           </div>
         </GlassCard>
+
+        {/* ── CE QUI EST INCLUS ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+        >
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3 ml-1">
+            Inclus dans votre plan
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <FeaturePill icon={<Calendar size={14} className="text-purple-400" />} label="Plan semaine par semaine" color="#a78bfa" delay={0.75} />
+            <FeaturePill icon={<Bot size={14} className="text-green-400" />} label="Coach IA 24h/24" color="#00ff87" delay={0.8} />
+            <FeaturePill icon={<BarChart3 size={14} className="text-cyan-400" />} label="Allures personnalisées" color="#00d4ff" delay={0.85} />
+            <FeaturePill icon={<Flame size={14} className="text-orange-400" />} label="Suivi de progression" color="#fb923c" delay={0.9} />
+          </div>
+        </motion.div>
 
         {/* CTA */}
         <motion.button
           onClick={() => setPage('new-program')}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.95 }}
           whileTap={{ scale: 0.97 }}
           whileHover={{ scale: 1.02 }}
           className="w-full py-5 rounded-2xl font-black text-black text-base tracking-wide relative overflow-hidden"
@@ -175,8 +261,18 @@ const WelcomeView: React.FC = () => {
             whileHover={{ x: '100%' }}
             transition={{ duration: 0.5 }}
           />
-          + Créer mon programme
+          Créer mon programme gratuitement
         </motion.button>
+
+        {/* Note de confiance */}
+        <motion.p
+          className="text-center text-gray-600 text-[11px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.1 }}
+        >
+          Aucune carte bancaire requise pour commencer.
+        </motion.p>
       </div>
     </Layout>
   );

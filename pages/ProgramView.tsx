@@ -95,7 +95,7 @@ const ProgramView: React.FC = () => {
                                         {session.structure.map((block, index) => (
                                             <div key={index} className={`text-sm p-2 rounded-lg border-l-2 bg-black/30 ${visuals.borderColor}`}>
                                                 <p className="font-semibold text-gray-300 flex items-center gap-2">{getBlockIcon(block.type)} {block.type}</p>
-                                                <p className="text-gray-400 text-xs mt-1 ml-1">{block.details}</p>
+                                                <p className="text-gray-400 text-xs mt-2 ml-1 whitespace-pre-line leading-relaxed">{block.details}</p>
                                             </div>
                                         ))}
                                     </div>

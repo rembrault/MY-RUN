@@ -122,16 +122,14 @@ const Auth: React.FC = () => {
                 transition={{ duration: 0.6 }}
                 className="flex flex-col items-center mb-10"
             >
-                <div className="bg-white/5 p-5 rounded-full border border-white/10 mb-4 shadow-[0_0_30px_rgba(0,255,135,0.15)]">
-                    <Zap size={36} className="text-green-400" style={{ filter: 'drop-shadow(0 0 8px #00ff87)' }} />
-                </div>
-                <h1
-                    className="text-4xl font-black tracking-widest text-white"
-                    style={{ textShadow: '0 0 20px rgba(0,255,135,0.4)' }}
-                >
-                    MY RUN
-                </h1>
-                <p className="text-gray-400 mt-1 text-sm tracking-wide">Votre coach running personnalisé</p>
+                <img
+                    src="/logo-myrun.png"
+                    alt="MY RUN"
+                    className="h-32 mb-1"
+                    style={{
+                        filter: 'drop-shadow(0 0 8px rgba(0,255,135,0.3)) drop-shadow(0 0 20px rgba(0,212,255,0.15))',
+                    }}
+                />
             </motion.div>
 
             {/* ── Carte principale ── */}

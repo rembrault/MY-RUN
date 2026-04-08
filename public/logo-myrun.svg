@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 180" width="440" height="180">
+  <!-- ══ M ══ Bold letter (bright blue) -->
+  <path d="
+    M 8,170 L 8,14 C 8,8 12,4 18,4 L 44,4 C 50,4 54,8 56,12
+    L 104,104 L 152,12 C 154,8 158,4 164,4 L 190,4 C 196,4 200,8 200,14
+    L 200,170 C 200,176 196,178 190,178 L 170,178 C 164,178 162,176 162,170
+    L 162,78 L 112,166 C 109,172 99,172 96,166
+    L 46,78 L 46,170 C 46,176 42,178 36,178 L 18,178 C 12,178 8,176 8,170 Z
+  " fill="#3BA6FF"/>
+
+  <!-- ══ R ══ Bold letter (bright green) -->
+  <path d="
+    M 278,170 L 278,4 L 374,4
+    C 414,4 432,24 432,56
+    C 432,86 416,104 390,110
+    L 434,166 C 438,172 434,178 428,178 L 402,178 C 396,178 392,174 388,168
+    L 348,114 L 314,114 L 314,170 C 314,176 310,178 304,178 L 286,178 C 280,178 278,176 278,170 Z
+    M 314,40 L 314,82 L 366,82 C 388,82 396,72 396,60 C 396,46 388,40 366,40 Z
+  " fill="#6BFF00"/>
+
+  <!-- ══ Runner ══ Dynamic running silhouette -->
+  <g stroke="#6BFF00" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Head (filled) -->
+    <circle cx="266" cy="14" r="17" fill="#6BFF00" stroke="none"/>
+
+    <!-- Torso - neck to hips, leaning forward -->
+    <line x1="262" y1="32" x2="248" y2="96" stroke-width="26"/>
+
+    <!-- Front arm - reaching UP and forward aggressively -->
+    <line x1="260" y1="46" x2="298" y2="20" stroke-width="14"/>
+
+    <!-- Back arm - swinging down and behind -->
+    <line x1="254" y1="52" x2="218" y2="74" stroke-width="14"/>
+
+    <!-- Front thigh -->
+    <line x1="254" y1="96" x2="296" y2="138" stroke-width="16"/>
+
+    <!-- Front shin -->
+    <line x1="296" y1="138" x2="322" y2="164" stroke-width="12"/>
+
+    <!-- Front foot -->
+    <line x1="322" y1="164" x2="346" y2="160" stroke-width="9"/>
+
+    <!-- Back thigh -->
+    <line x1="244" y1="96" x2="206" y2="142" stroke-width="16"/>
+
+    <!-- Back shin -->
+    <line x1="206" y1="142" x2="190" y2="168" stroke-width="12"/>
+
+    <!-- Back foot -->
+    <line x1="190" y1="168" x2="174" y2="172" stroke-width="9"/>
+  </g>
+</svg>
