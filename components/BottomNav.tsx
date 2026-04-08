@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, User, Gauge, ScrollText, Bot } from 'lucide-react';
+import { Home, User, Gauge, ScrollText, Bot, BarChart3 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Page } from '../types';
 
@@ -10,6 +10,7 @@ const BottomNav: React.FC = () => {
         { id: 'home',           icon: Home,      label: 'Accueil' },
         { id: 'my-programs',    icon: ScrollText, label: 'Progr.' },
         { id: 'coach-ia',       icon: Bot,        label: 'Coach IA' }, // ← NOUVEAU
+        { id: 'statistics',     icon: BarChart3,   label: 'Stats' },
         { id: 'vma-calculator', icon: Gauge,      label: 'VMA' },
         { id: 'profile',        icon: User,       label: 'Profil' },
     ];

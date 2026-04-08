@@ -14,6 +14,7 @@ import VMACalculator from './pages/VMACalculator';
 import ProgramView from './pages/ProgramView';
 import MyPrograms from './pages/MyPrograms';
 import CoachIA from './pages/CoachIA';
+import Statistics from './pages/Statistics';
 import PageTransition from './components/PageTransition';
 import SplashScreen from './components/SplashScreen';
 
@@ -65,7 +66,8 @@ const PageRenderer: React.FC = () => {
                 case 'vma-calculator':  return <VMACalculator />;
                 case 'program-view':    return <ProgramView />;
                 case 'my-programs':     return <MyPrograms />;
-                case 'coach-ia':        return <CoachIA />;  // ← NOUVEAU
+                case 'coach-ia':        return <CoachIA />;
+                case 'statistics':      return <Statistics />;
                 default:                return <Welcome />;
             }
         }
@@ -79,7 +81,8 @@ const PageRenderer: React.FC = () => {
             case 'calendar':        return <CalendarExport />;
             case 'vma-calculator':  return <VMACalculator />;
             case 'program-view':    return <ProgramView />;
-            case 'coach-ia':        return <CoachIA />;     // ← NOUVEAU
+            case 'coach-ia':        return <CoachIA />;
+            case 'statistics':      return <Statistics />;
             default:
                 if (page.startsWith('week-')) {
                     const weekIndex = parseInt(page.split('-')[1], 10);

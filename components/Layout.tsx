@@ -1,5 +1,5 @@
 import React, { ReactNode, useState, useRef, useEffect } from 'react';
-import { Home, User, Gauge, ScrollText, Bot, Zap } from 'lucide-react';
+import { Home, User, Gauge, ScrollText, Bot, Zap, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import { Page } from '../types';
@@ -75,6 +75,7 @@ const DesktopNav: React.FC = () => {
     { id: 'home',           icon: Home,       label: 'Tableau de bord', color: 'cyan' },
     { id: 'my-programs',    icon: ScrollText, label: 'Mon programme',   color: 'green' },
     { id: 'coach-ia',       icon: Bot,        label: 'Coach IA',        color: 'green', badge: 'IA' },
+    { id: 'statistics',     icon: BarChart3,  label: 'Statistiques',    color: 'cyan' },
     { id: 'vma-calculator', icon: Gauge,      label: 'Calculateur VMA', color: 'cyan' },
     { id: 'profile',        icon: User,       label: 'Mon profil',      color: 'green' },
   ];

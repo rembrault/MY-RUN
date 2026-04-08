@@ -93,7 +93,7 @@ export interface User {
     activeProgramId?: string | null;
 }
 
-export type Page = 'welcome' | 'new-program' | 'home' | 'my-programs' | 'profile' | 'edit-profile' | 'payment' | 'calendar' | 'vma-calculator' | 'coach-ia' | `week-${number}` | 'program-view';
+export type Page = 'welcome' | 'new-program' | 'home' | 'my-programs' | 'profile' | 'edit-profile' | 'payment' | 'calendar' | 'vma-calculator' | 'coach-ia' | 'statistics' | `week-${number}` | 'program-view';
 
 export interface AppContextType {
     saveProgram: (program: Program) => Promise<void>;
