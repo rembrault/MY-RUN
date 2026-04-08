@@ -22,9 +22,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon-192.svg', 'icon-512.svg', 'apple-touch-icon.svg'],
+      includeAssets: ['icon-192.svg', 'icon-512.svg', 'apple-touch-icon.svg', 'sw-custom.js'],
       devOptions: {
         enabled: true
+      },
+      workbox: {
+        importScripts: ['/sw-custom.js'],
       },
       manifest: {
         name: 'MY RUN',

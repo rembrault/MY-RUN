@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Play, Calendar, TrendingUp, ChevronRight, Target, Flame } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import Layout from '../components/Layout';
+import NotificationBanner from '../components/NotificationBanner';
+import { scheduleNextReminder, isReminderEnabled } from '../services/notifications';
 
 // ── Compteur animé ──────────────────────────────────────────
 const CountUp: React.FC<{ value: number; duration?: number }> = ({ value, duration = 800 }) => {
@@ -185,6 +187,14 @@ const WelcomeView: React.FC = () => {
 // ─────────────────────────────────────────────────────────────
 const DashboardView: React.FC = () => {
   const { program, user, setPage } = useAppContext();
+
+  // Planifier les rappels de séance si activés
+  useEffect(() => {
+    if (program && isReminderEnabled()) {
+      scheduleNextReminder(program);
+    }
+  }, [program]);
+
   if (!program) return null;
 
   const completedSessions = program.weeks.flatMap(w => w.sessions).filter(s => s.completed).length;
@@ -225,6 +235,9 @@ const DashboardView: React.FC = () => {
           </p>
           <h1 className="text-2xl font-black text-white mt-0.5">Tableau de bord</h1>
         </motion.div>
+
+        {/* Bannière notifications */}
+        <NotificationBanner />
 
         {/* Carte programme principal */}
         <GlassCard
