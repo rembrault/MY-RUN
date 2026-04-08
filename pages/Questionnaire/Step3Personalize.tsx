@@ -240,7 +240,8 @@ const Step3Personalize: React.FC<Step3Props> = ({
                                         <p className="text-xs text-gray-500 mt-0.5">
                                             {new Date(race.date).toLocaleDateString('fr-FR', {
                                                 year: 'numeric', month: 'long', day: 'numeric'
-                                            })} · {race.country}
+                                            })} · {race.city || ''}{race.city && race.country ? ', ' : ''}{race.country}
+                                            {race.elevation > 0 ? ` · D+ ${race.elevation}m` : ''}
                                         </p>
                                     </motion.div>
                                 ))}
