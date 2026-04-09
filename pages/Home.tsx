@@ -1,10 +1,131 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Play, Calendar, TrendingUp, ChevronRight, Target, Flame, Zap, Bot, BarChart3, ClipboardList } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Calendar, TrendingUp, ChevronRight, Target, Flame, Zap, Bot, BarChart3, ClipboardList, X, Sparkles, Dumbbell, MessageCircle, LineChart } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import Layout from '../components/Layout';
 import NotificationBanner from '../components/NotificationBanner';
 import { scheduleNextReminder, isReminderEnabled } from '../services/notifications';
+
+// ── Clé localStorage pour mémoriser la fermeture ───────────
+const TUTORIAL_DISMISSED_KEY = 'myrun_tutorial_dismissed';
+
+// ── Bannière tutoriel ──────────────────────────────────────
+const TutorialBanner: React.FC<{ variant: 'welcome' | 'dashboard' }> = ({ variant }) => {
+  const [show, setShow] = useState(false);
+  const { setPage } = useAppContext();
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem(TUTORIAL_DISMISSED_KEY);
+    if (!dismissed) {
+      setShow(true);
+    }
+  }, []);
+
+  const handleDismiss = () => {
+    localStorage.setItem(TUTORIAL_DISMISSED_KEY, 'true');
+    setShow(false);
+  };
+
+  const tips = variant === 'welcome'
+    ? [
+        { icon: <ClipboardList size={15} className="text-cyan-400" />, text: 'Créez votre programme personnalisé en répondant à quelques questions', color: '#00d4ff' },
+        { icon: <Bot size={15} className="text-green-400" />, text: 'Un coach IA est disponible 24h/24 pour répondre à vos questions', color: '#00ff87' },
+        { icon: <Dumbbell size={15} className="text-orange-400" />, text: 'Chaque séance est détaillée avec échauffement, corps et retour au calme', color: '#fb923c' },
+        { icon: <LineChart size={15} className="text-purple-400" />, text: 'Suivez vos statistiques et votre progression semaine après semaine', color: '#a78bfa' },
+      ]
+    : [
+        { icon: <Target size={15} className="text-cyan-400" />, text: 'Cliquez sur une semaine pour voir le détail de vos séances', color: '#00d4ff' },
+        { icon: <Sparkles size={15} className="text-green-400" />, text: 'Après chaque séance, donnez votre ressenti pour adapter le plan', color: '#00ff87' },
+        { icon: <MessageCircle size={15} className="text-orange-400" />, text: 'Utilisez le Coach IA pour des conseils personnalisés en temps réel', color: '#fb923c' },
+        { icon: <LineChart size={15} className="text-purple-400" />, text: 'Consultez vos statistiques pour visualiser votre progression', color: '#a78bfa' },
+      ];
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0, y: -10, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.97 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          className="rounded-2xl p-5 relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(0,212,255,0.06), rgba(0,255,135,0.04))',
+            border: '1px solid rgba(0,212,255,0.15)',
+          }}
+        >
+          {/* Ligne accent haut */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+
+          {/* Bouton fermer */}
+          <button
+            onClick={handleDismiss}
+            className="absolute top-3 right-3 p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <X size={14} />
+          </button>
+
+          {/* Titre */}
+          <div className="flex items-center gap-2 mb-4">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{ background: 'rgba(0,255,135,0.1)', border: '1px solid rgba(0,255,135,0.2)' }}
+            >
+              <Sparkles size={14} className="text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">
+                {variant === 'welcome' ? 'Bienvenue sur MY RUN !' : 'Guide rapide'}
+              </p>
+              <p className="text-[10px] text-gray-500">
+                {variant === 'welcome' ? 'Votre coach running personnel' : 'Pour bien démarrer votre entraînement'}
+              </p>
+            </div>
+          </div>
+
+          {/* Tips */}
+          <div className="flex flex-col gap-3 mb-4">
+            {tips.map((tip, i) => (
+              <motion.div
+                key={i}
+                className="flex items-start gap-3"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 + i * 0.08 }}
+              >
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ background: `${tip.color}12`, border: `1px solid ${tip.color}25` }}
+                >
+                  {tip.icon}
+                </div>
+                <p className="text-xs text-gray-300 leading-relaxed pt-1">{tip.text}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Action */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handleDismiss}
+              className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Ne plus afficher
+            </button>
+            {variant === 'dashboard' && (
+              <button
+                onClick={() => { setPage('statistics'); handleDismiss(); }}
+                className="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
+              >
+                Voir mes stats <ChevronRight size={12} />
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 // ── Compteur animé ──────────────────────────────────────────
 const CountUp: React.FC<{ value: number; duration?: number }> = ({ value, duration = 800 }) => {
@@ -141,6 +262,9 @@ const WelcomeView: React.FC = () => {
   return (
     <Layout>
       <div className="flex flex-col gap-5 py-2">
+
+        {/* Tutoriel de bienvenue */}
+        <TutorialBanner variant="welcome" />
 
         {/* Hero compact */}
         <motion.div
@@ -470,6 +594,9 @@ const DashboardView: React.FC = () => {
             </div>
           </GlassCard>
         </div>
+
+        {/* Tutoriel guide rapide */}
+        <TutorialBanner variant="dashboard" />
 
         {/* Semaines complétées */}
         {completedSessions > 0 && (
