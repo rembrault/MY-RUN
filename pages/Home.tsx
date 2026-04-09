@@ -230,7 +230,7 @@ const WelcomeView: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
         >
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3 ml-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-3 ml-1">
             Inclus dans votre plan
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -266,7 +266,7 @@ const WelcomeView: React.FC = () => {
 
         {/* Note de confiance */}
         <motion.p
-          className="text-center text-gray-600 text-[11px]"
+          className="text-center text-gray-500 text-[11px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1 }}
@@ -392,7 +392,7 @@ const DashboardView: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-gray-500">
                 {completedSessions}/{totalSessions} séances complétées
               </p>
               <div className="flex items-center gap-1 text-cyan-400 text-xs font-semibold">
@@ -432,7 +432,7 @@ const DashboardView: React.FC = () => {
                     {nextSession.type} · {nextSession.duration} min
                   </p>
                 </div>
-                <ChevronRight size={16} className="text-gray-600" />
+                <ChevronRight size={16} className="text-gray-500" />
               </div>
             </div>
           </GlassCard>
@@ -451,7 +451,7 @@ const DashboardView: React.FC = () => {
               <p className="text-2xl font-black text-white">
                 J-<CountUp value={daysLeft} />
               </p>
-              <p className="text-gray-600 text-[11px] mt-0.5">Avant la course</p>
+              <p className="text-gray-500 text-[11px] mt-0.5">Avant la course</p>
             </div>
           </GlassCard>
 
@@ -466,7 +466,7 @@ const DashboardView: React.FC = () => {
               <p className="text-2xl font-black text-white">
                 {program.vma || user.vma || '—'}
               </p>
-              <p className="text-gray-600 text-[11px] mt-0.5">VMA (km/h)</p>
+              <p className="text-gray-500 text-[11px] mt-0.5">VMA (km/h)</p>
             </div>
           </GlassCard>
         </div>

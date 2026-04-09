@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Gauge, Calculator, Save, Timer, Footprints } from 'lucide-react';
 import Layout from '../components/Layout';
+import Modal from '../components/Modal';
 import { useAppContext } from '../context/AppContext';
 import NeonButton from '../components/NeonButton';
 
@@ -43,11 +44,12 @@ const VMACalculator: React.FC = () => {
         setResult(vma > 0 ? parseFloat(vma.toFixed(2)) : null);
     };
 
+    const [showSavedModal, setShowSavedModal] = useState(false);
+
     const saveVMA = () => {
         if (result !== null) {
             updateUser({ vma: result });
-            alert(`Votre VMA de ${result} km/h a été enregistrée !`);
-            setPage('profile');
+            setShowSavedModal(true);
         }
     };
 
@@ -60,7 +62,7 @@ const VMACalculator: React.FC = () => {
                             <Gauge size={20} className="text-orange-400"/>
                             Distance parcourue en 6 minutes (m)
                         </label>
-                        <input type="number" value={demiCooperDist} onChange={(e) => setDemiCooperDist(parseInt(e.target.value, 10))} placeholder="Ex: 1500" className="w-full bg-black/20 rounded-lg p-4 mt-3 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-3xl font-black text-center text-white placeholder-gray-600" />
+                        <input type="number" value={demiCooperDist} onChange={(e) => setDemiCooperDist(parseInt(e.target.value, 10))} placeholder="Ex: 1500" className="w-full bg-black/20 rounded-lg p-4 mt-3 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-3xl font-black text-center text-white placeholder-gray-500" />
                     </div>
                 );
             case 'vameval':
@@ -70,7 +72,7 @@ const VMACalculator: React.FC = () => {
                            <Footprints size={20} className="text-orange-400"/>
                            Dernier palier VAMEVAL complété
                         </label>
-                        <input type="number" value={vamevalStage} onChange={(e) => setVamevalStage(parseInt(e.target.value, 10))} placeholder="Ex: 12" className="w-full bg-black/20 rounded-lg p-4 mt-3 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-3xl font-black text-center text-white placeholder-gray-600" />
+                        <input type="number" value={vamevalStage} onChange={(e) => setVamevalStage(parseInt(e.target.value, 10))} placeholder="Ex: 12" className="w-full bg-black/20 rounded-lg p-4 mt-3 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-3xl font-black text-center text-white placeholder-gray-500" />
                     </div>
                 );
             case 'raceTime':
@@ -107,6 +109,7 @@ const VMACalculator: React.FC = () => {
     };
 
     return (
+        <>
         <Layout>
             <header className="flex items-center mb-6 relative">
                 <button onClick={() => setPage('profile')} className="absolute left-0 p-2 text-gray-400 hover:text-white">
@@ -152,6 +155,18 @@ const VMACalculator: React.FC = () => {
                 </div>
             )}
         </Layout>
+
+        <Modal
+            open={showSavedModal}
+            onClose={() => { setShowSavedModal(false); setPage('profile'); }}
+            variant="success"
+            title="VMA enregistrée"
+            message={`Votre VMA de ${result} km/h a bien été enregistrée sur votre profil.`}
+            confirmLabel="OK"
+            singleAction
+            onConfirm={() => setPage('profile')}
+        />
+        </>
     );
 };
 

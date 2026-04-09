@@ -4,6 +4,7 @@ import { ArrowLeft, Scale, Ruler, Calendar, Activity, Gauge, User as UserIcon, M
 import { useAppContext } from '../context/AppContext';
 import { User, Level } from '../types';
 import Layout from '../components/Layout';
+import Modal from '../components/Modal';
 import NeonButton from '../components/NeonButton';
 
 interface EditProfileProps {
@@ -13,6 +14,7 @@ interface EditProfileProps {
 const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
     const { user, updateUser, setPage, completeOnboarding } = useAppContext();
     const [formData, setFormData] = useState<User>(user);
+    const [modalInfo, setModalInfo] = useState<{ open: boolean; title: string; message: string; variant: 'success' | 'info' | 'danger' }>({ open: false, title: '', message: '', variant: 'info' });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -52,20 +54,20 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
 
     const handleSave = () => {
         if (!formData.name) {
-            alert("Merci d'indiquer votre prénom.");
+            setModalInfo({ open: true, title: 'Champ requis', message: "Merci d'indiquer votre prénom.", variant: 'info' });
             return;
         }
         updateUser(formData);
-        
+
         if (isOnboarding) {
             completeOnboarding();
         } else {
-            alert('Profil mis à jour !');
-            setPage('profile');
+            setModalInfo({ open: true, title: 'Profil mis à jour', message: 'Vos informations ont bien été enregistrées.', variant: 'success' });
         }
     };
 
     return (
+        <>
         <Layout showBottomNav={!isOnboarding}>
             <header className="flex items-center mb-6">
                 {!isOnboarding && (
@@ -109,7 +111,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
             <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                     <InputCard icon={<UserIcon size={18} className="text-cyan-400" />} label="Prénom">
-                        <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Votre prénom" className="w-full bg-white/5 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium" />
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Votre prénom" className="w-full bg-white/5 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-500 font-medium" />
                     </InputCard>
                 </div>
                 
@@ -118,7 +120,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
                         <button type="button" onClick={() => decrement('weight')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
                             <Minus size={14} />
                         </button>
-                        <input type="number" name="weight" value={formData.weight || ''} onChange={handleNumberChange} className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                        <input type="number" name="weight" value={formData.weight || ''} onChange={handleNumberChange} className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-500 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                         <button type="button" onClick={() => increment('weight')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
                             <Plus size={14} />
                         </button>
@@ -130,7 +132,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
                         <button type="button" onClick={() => decrement('height')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
                             <Minus size={14} />
                         </button>
-                        <input type="number" name="height" value={formData.height || ''} onChange={handleNumberChange} className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                        <input type="number" name="height" value={formData.height || ''} onChange={handleNumberChange} className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-500 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                         <button type="button" onClick={() => increment('height')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
                             <Plus size={14} />
                         </button>
@@ -146,7 +148,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
                         <button type="button" onClick={() => decrement('vma', 0.5)} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
                             <Minus size={14} />
                         </button>
-                        <input type="number" step="0.1" name="vma" value={formData.vma || ''} onChange={handleNumberChange} placeholder="Ex: 12.5" className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                        <input type="number" step="0.1" name="vma" value={formData.vma || ''} onChange={handleNumberChange} placeholder="Ex: 12.5" className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-500 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                         <button type="button" onClick={() => increment('vma', 0.5)} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
                             <Plus size={14} />
                         </button>
@@ -165,7 +167,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
 
                 <div className="col-span-2">
                      <InputCard icon={<Mail size={18} className="text-gray-400" />} label="Email (optionnel)">
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@exemple.com" className="w-full bg-white/5 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-600 font-medium" />
+                        <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@exemple.com" className="w-full bg-white/5 rounded-lg p-2.5 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-500 font-medium" />
                     </InputCard>
                 </div>
             </div>
@@ -176,6 +178,23 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
                 </NeonButton>
             </div>
         </Layout>
+
+        <Modal
+            open={modalInfo.open}
+            onClose={() => {
+                setModalInfo(prev => ({ ...prev, open: false }));
+                if (modalInfo.variant === 'success') setPage('profile');
+            }}
+            variant={modalInfo.variant}
+            title={modalInfo.title}
+            message={modalInfo.message}
+            confirmLabel="OK"
+            singleAction
+            onConfirm={() => {
+                if (modalInfo.variant === 'success') setPage('profile');
+            }}
+        />
+        </>
     );
 };
 

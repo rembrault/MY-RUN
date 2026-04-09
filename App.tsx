@@ -17,6 +17,7 @@ import CoachIA from './pages/CoachIA';
 import Statistics from './pages/Statistics';
 import PageTransition from './components/PageTransition';
 import SplashScreen from './components/SplashScreen';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const PageRenderer: React.FC = () => {
     const { page, program, hasOnboarded, isAuthenticated, isLoading } = useAppContext();
@@ -93,18 +94,22 @@ const PageRenderer: React.FC = () => {
     };
 
     return (
-        <AnimatePresence mode="wait">
-            <PageTransition key={hasOnboarded ? page : 'onboarding'}>
-                {getComponent()}
-            </PageTransition>
-        </AnimatePresence>
+        <ErrorBoundary fallbackPage={() => setPage('home')}>
+            <AnimatePresence mode="wait">
+                <PageTransition key={hasOnboarded ? page : 'onboarding'}>
+                    {getComponent()}
+                </PageTransition>
+            </AnimatePresence>
+        </ErrorBoundary>
     );
 };
 
 const App: React.FC = () => (
-    <AppProvider>
-        <PageRenderer />
-    </AppProvider>
+    <ErrorBoundary>
+        <AppProvider>
+            <PageRenderer />
+        </AppProvider>
+    </ErrorBoundary>
 );
 
 export default App;

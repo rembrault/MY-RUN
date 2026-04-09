@@ -414,7 +414,7 @@ PROFIL DE L'UTILISATEUR :
                                                 </div>
                                                 <button
                                                     onClick={(e) => deleteConversation(conv.id, e)}
-                                                    className="p-1.5 text-gray-600 hover:text-red-400 transition-colors flex-shrink-0"
+                                                    className="p-1.5 text-gray-500 hover:text-red-400 transition-colors flex-shrink-0"
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
@@ -496,7 +496,7 @@ PROFIL DE L'UTILISATEUR :
                         onKeyDown={handleKeyDown}
                         placeholder="Pose ta question au coach..."
                         rows={1}
-                        className="flex-1 bg-transparent text-white text-sm placeholder-gray-600 resize-none outline-none py-2 px-2 max-h-32"
+                        className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 resize-none outline-none py-2 px-2 max-h-32"
                         style={{ minHeight: '40px' }}
                         onInput={(e) => {
                             const target = e.target as HTMLTextAreaElement;
@@ -513,7 +513,7 @@ PROFIL DE L'UTILISATEUR :
                     </button>
                 </div>
 
-                <p className="text-xs text-gray-700 text-center mt-2 flex-shrink-0">
+                <p className="text-xs text-gray-500 text-center mt-2 flex-shrink-0">
                     Entrée pour envoyer • Maj+Entrée pour nouvelle ligne
                 </p>
             </div>

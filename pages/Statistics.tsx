@@ -207,7 +207,7 @@ const Statistics: React.FC = () => {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <TrendingUp size={48} className="text-gray-600 mb-4" />
+          <TrendingUp size={48} className="text-gray-500 mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Pas encore de statistiques</h2>
           <p className="text-gray-500 text-sm mb-6 max-w-xs">
             Créez un programme d'entraînement et complétez des séances pour voir vos statistiques de progression.

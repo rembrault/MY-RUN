@@ -202,11 +202,11 @@ const Step3Personalize: React.FC<Step3Props> = ({
                             value={formData.raceName}
                             onChange={handleRaceNameChange}
                             onFocus={() => setShowResults(true)}
-                            className="flex-1 bg-transparent text-sm font-semibold text-white focus:outline-none placeholder-gray-600"
+                            className="flex-1 bg-transparent text-sm font-semibold text-white focus:outline-none placeholder-gray-500"
                         />
                         {isSearching
                             ? <LoaderCircle size={15} className="animate-spin text-gray-500 flex-shrink-0" />
-                            : <Search size={15} className="text-gray-600 flex-shrink-0" />
+                            : <Search size={15} className="text-gray-500 flex-shrink-0" />
                         }
                     </div>
 
@@ -357,7 +357,7 @@ const Step3Personalize: React.FC<Step3Props> = ({
                             );
                         })}
                     </div>
-                    <p className="text-[10px] text-gray-600 text-center mt-2.5">
+                    <p className="text-[10px] text-gray-500 text-center mt-2.5">
                         Minimum 2 jours · Maximum 6 jours
                     </p>
                 </SectionCard>

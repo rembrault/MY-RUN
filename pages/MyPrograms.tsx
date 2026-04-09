@@ -233,22 +233,22 @@ const MyPrograms: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600 truncate">{week.title}</p>
+                    <p className="text-xs text-gray-500 truncate">{week.title}</p>
                   </div>
 
                   {/* Droite : sessions ou cadenas */}
                   <div className="flex-shrink-0 flex items-center gap-2">
                     {isLocked ? (
-                      <Lock size={14} className="text-gray-700" />
+                      <Lock size={14} className="text-gray-500" />
                     ) : (
                       <>
                         <div className="text-right">
                           <p className="text-sm font-bold" style={{ color: statusColor }}>
                             {sessionsDone}/{sessionsTotal}
                           </p>
-                          <p className="text-[10px] text-gray-600">séances</p>
+                          <p className="text-[10px] text-gray-500">séances</p>
                         </div>
-                        <ChevronRight size={14} className="text-gray-700 group-hover:text-gray-500 transition-colors" />
+                        <ChevronRight size={14} className="text-gray-500 group-hover:text-gray-500 transition-colors" />
                       </>
                     )}
                   </div>
@@ -301,7 +301,7 @@ const MyPrograms: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-gray-600 uppercase tracking-widest">Semaine 1</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest">Semaine 1</p>
                   <p className="text-green-400 text-xs font-bold">Offerte ✓</p>
                 </div>
               </div>

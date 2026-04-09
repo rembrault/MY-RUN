@@ -1,14 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, Download } from 'lucide-react';
 import Layout from '../components/Layout';
+import Modal from '../components/Modal';
 import { useAppContext } from '../context/AppContext';
 import NeonButton from '../components/NeonButton';
 
 const CalendarExport: React.FC = () => {
     const { program, setPage } = useAppContext();
+    const [showExportModal, setShowExportModal] = useState(false);
 
     return (
+        <>
         <Layout>
             <div className="flex flex-col items-center justify-center h-full text-center pt-16">
                 <div className="p-6 bg-gradient-to-br from-cyan-500 to-green-500 rounded-2xl inline-block mb-6">
@@ -21,7 +24,7 @@ const CalendarExport: React.FC = () => {
 
                 {program ? (
                     <div className="w-full">
-                        <NeonButton onClick={() => alert('Export .ics en cours...')}>
+                        <NeonButton onClick={() => setShowExportModal(true)}>
                             <Download size={20} className="mr-2"/> Exporter en .ics
                         </NeonButton>
                     </div>
@@ -46,6 +49,17 @@ const CalendarExport: React.FC = () => {
                 </div>
             </div>
         </Layout>
+
+        <Modal
+            open={showExportModal}
+            onClose={() => setShowExportModal(false)}
+            variant="info"
+            title="Export en cours"
+            message="L'export de votre fichier .ics est en préparation. Vous pourrez l'importer dans votre calendrier."
+            confirmLabel="OK"
+            singleAction
+        />
+        </>
     );
 };
 

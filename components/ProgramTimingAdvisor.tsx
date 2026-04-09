@@ -64,7 +64,7 @@ const Timeline: React.FC<{ rec: ProgramRecommendation }> = ({ rec }) => {
                         style={{ width: `${mainPct}%` }}
                     />
                 </div>
-                <div className="flex justify-between text-xs text-gray-600">
+                <div className="flex justify-between text-xs text-gray-500">
                     <span className="flex items-center gap-1">
                         <span className="w-2 h-2 rounded-sm bg-emerald-500/50 inline-block" />
                         Mise en forme ({rec.conditioningWeeks} sem.)
@@ -85,7 +85,7 @@ const Timeline: React.FC<{ rec: ProgramRecommendation }> = ({ rec }) => {
             <div className="flex h-3 rounded-full overflow-hidden">
                 <div className="bg-amber-500/70 rounded-full w-full" />
             </div>
-            <div className="flex justify-between text-xs text-gray-600 mt-1">
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>⚡ Début intensif</span>
                 <span>🏁 Course ({rec.weeksUntilRace} sem.)</span>
             </div>
@@ -165,7 +165,7 @@ const ProgramTimingAdvisor: React.FC<Props> = ({
                             </p>
                             <ScenarioBadge scenario={rec.scenario} />
                         </div>
-                        <div className="text-right text-xs text-gray-600">
+                        <div className="text-right text-xs text-gray-500">
                             <div>Optimal : {optimal?.min}-{optimal?.max} sem.</div>
                         </div>
                     </div>
@@ -222,7 +222,7 @@ const ProgramTimingAdvisor: React.FC<Props> = ({
                     >
                         <button
                             onClick={onAcceptOptimal}
-                            className="text-xs text-gray-600 underline underline-offset-2 hover:text-gray-400 transition-colors"
+                            className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-400 transition-colors"
                         >
                             Ou commencer directement le programme de {rec.mainProgramWeeks} semaines maintenant
                         </button>
@@ -237,7 +237,7 @@ const ProgramTimingAdvisor: React.FC<Props> = ({
                         transition={{ delay: 0.5 }}
                         className="text-center"
                     >
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-gray-500">
                             Tu peux aussi changer ta date de course pour une préparation optimale
                         </p>
                     </motion.div>

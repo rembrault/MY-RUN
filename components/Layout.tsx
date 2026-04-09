@@ -62,7 +62,7 @@ const AnimatedLogo: React.FC = () => {
             style={{ filter: 'drop-shadow(0 0 4px rgba(0,255,135,0.25)) drop-shadow(0 0 10px rgba(0,212,255,0.12))' }}
         />
       </div>
-      <p className="text-gray-600 text-xs tracking-wider uppercase ml-1">Votre coach running</p>
+      <p className="text-gray-500 text-xs tracking-wider uppercase ml-1">Votre coach running</p>
     </motion.div>
   );
 };

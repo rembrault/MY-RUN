@@ -187,7 +187,7 @@ const Auth: React.FC = () => {
                                     onChange={(e) => setEmail(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                                     placeholder="votre@email.com"
-                                    className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all"
+                                    className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all"
                                 />
                             </div>
                         </div>
@@ -206,7 +206,7 @@ const Auth: React.FC = () => {
                                         onChange={(e) => setPassword(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                                         placeholder="••••••••"
-                                        className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-12 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all"
+                                        className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-12 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all"
                                     />
                                     <button
                                         onClick={() => setShowPassword(!showPassword)}
@@ -232,7 +232,7 @@ const Auth: React.FC = () => {
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                                         placeholder="••••••••"
-                                        className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all"
+                                        className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all"
                                     />
                                 </div>
                             </div>
@@ -308,7 +308,7 @@ const Auth: React.FC = () => {
                     <>
                         <div className="flex items-center gap-3 my-5">
                             <div className="flex-1 h-px bg-white/10" />
-                            <span className="text-gray-600 text-xs uppercase tracking-widest">ou</span>
+                            <span className="text-gray-500 text-xs uppercase tracking-widest">ou</span>
                             <div className="flex-1 h-px bg-white/10" />
                         </div>
 
@@ -336,7 +336,7 @@ const Auth: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-gray-600 text-xs text-center mt-6 max-w-xs"
+                className="text-gray-500 text-xs text-center mt-6 max-w-xs"
             >
                 En vous connectant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
             </motion.p>

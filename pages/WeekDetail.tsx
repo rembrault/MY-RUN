@@ -8,6 +8,8 @@ import { Session, WorkoutBlock, SessionFeedback } from '../types';
 import { downloadGarminFile } from '../services/garminService';
 import { downloadICS } from '../services/icsService';
 import NeonButton from '../components/NeonButton';
+import Modal from '../components/Modal';
+import { WeekDetailSkeleton } from '../components/Skeleton';
 
 const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
@@ -33,9 +35,11 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
     const [dragOverId, setDragOverId] = useState<string | null>(null);
     const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
     const [showAdaptationModal, setShowAdaptationModal] = useState(false);
+    const [showAdaptationSuccessModal, setShowAdaptationSuccessModal] = useState(false);
+    const [showExportInfoModal, setShowExportInfoModal] = useState(false);
     
     if (!program) {
-        return <Layout><div className="text-center text-white">Chargement...</div></Layout>;
+        return <Layout><WeekDetailSkeleton /></Layout>;
     }
 
     const week = program.weeks[weekIndex];
@@ -99,7 +103,7 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
     const handleAdaptationConfirm = () => {
         adaptProgramIntensity(5); // Réduire de 5%
         setShowAdaptationModal(false);
-        alert("Votre VMA a été ajustée. Le plan sera plus doux !");
+        setShowAdaptationSuccessModal(true);
     };
 
     // --- DRAG & DROP ---
@@ -161,6 +165,7 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
     };
 
     return (
+        <>
         <Layout showBottomNav={false}>
             <header className="text-center mb-6 relative">
                  <button onClick={() => setPage('home')} className="absolute left-0 p-1 text-gray-400 hover:text-white">
@@ -352,6 +357,26 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
                 </div>
             )}
         </Layout>
+
+        <Modal
+            open={showAdaptationSuccessModal}
+            onClose={() => setShowAdaptationSuccessModal(false)}
+            variant="success"
+            title="Intensité ajustée"
+            message="Votre VMA a été ajustée. Le plan sera plus doux !"
+            confirmLabel="OK"
+            singleAction
+        />
+        <Modal
+            open={showExportInfoModal}
+            onClose={() => setShowExportInfoModal(false)}
+            variant="info"
+            title="Export ICS"
+            message="Utilisez le bouton calendrier en haut pour exporter la semaine complète."
+            confirmLabel="Compris"
+            singleAction
+        />
+        </>
     );
 };
 
@@ -470,7 +495,7 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
           <div className="pl-11 mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
             <p className="text-xs text-gray-400 font-semibold">EXPORTS</p>
             <div className="flex items-center gap-4">
-                <button onClick={() => alert("Utilisez le bouton calendrier en haut pour exporter la semaine complète.")} className="text-sm text-gray-400 font-semibold flex items-center gap-2 hover:text-white transition-colors">
+                <button onClick={() => setShowExportInfoModal(true)} className="text-sm text-gray-400 font-semibold flex items-center gap-2 hover:text-white transition-colors">
                     <Calendar size={16} /> ICS
                 </button>
                 <button onClick={onExportGarmin} className="text-sm text-cyan-400 font-semibold flex items-center gap-2 hover:text-white transition-colors">

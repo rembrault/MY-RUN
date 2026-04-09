@@ -1,25 +1,24 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Mail, Settings, Trophy, Target, Gauge, CheckCircle, Eye, Trash2, Camera, XCircle, LogIn, LogOut } from 'lucide-react';
 import Layout from '../components/Layout';
+import Modal from '../components/Modal';
+import { ProfileSkeleton } from '../components/Skeleton';
 import { useAppContext } from '../context/AppContext';
 import { Program } from '../types';
 
 const Profile: React.FC = () => {
     const { user, program, deleteProgram, setPage, programHistory, setViewedProgram, updateUser, clearHistory, login, logout, isLoading, isAuthenticated } = useAppContext();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
+
     const confirmDelete = () => {
-        if (window.confirm("Attention : Cela supprimera définitivement votre programme actuel. Continuer ?")) {
-            deleteProgram();
-            setPage('welcome');
-        }
+        setShowDeleteModal(true);
     };
-    
+
     const confirmClearHistory = () => {
-        if (window.confirm("Êtes-vous sûr de vouloir effacer tout l'historique des programmes passés ?")) {
-            clearHistory();
-        }
+        setShowClearHistoryModal(true);
     };
     
     const handleViewHistory = (p: Program) => {
@@ -50,14 +49,13 @@ const Profile: React.FC = () => {
     if (isLoading) {
         return (
             <Layout>
-                <div className="flex justify-center items-center h-[60vh]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
-                </div>
+                <ProfileSkeleton />
             </Layout>
         );
     }
 
     return (
+        <>
         <Layout>
             <div className="pt-8 pb-8">
                 <div className="flex flex-col items-center text-center">
@@ -167,6 +165,27 @@ const Profile: React.FC = () => {
                 </div>
             </div>
         </Layout>
+
+        {/* Modales de confirmation */}
+        <Modal
+            open={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            variant="danger"
+            title="Supprimer le programme"
+            message="Cela supprimera définitivement votre programme actuel. Cette action est irréversible."
+            confirmLabel="Supprimer"
+            onConfirm={() => { deleteProgram(); setPage('welcome'); }}
+        />
+        <Modal
+            open={showClearHistoryModal}
+            onClose={() => setShowClearHistoryModal(false)}
+            variant="danger"
+            title="Effacer l'historique"
+            message="Êtes-vous sûr de vouloir effacer tout l'historique des programmes passés ?"
+            confirmLabel="Effacer"
+            onConfirm={() => clearHistory()}
+        />
+        </>
     );
 };
 

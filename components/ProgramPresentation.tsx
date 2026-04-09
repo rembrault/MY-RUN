@@ -235,7 +235,7 @@ const ProgramPresentationScreen: React.FC<Props> = ({ program, onComplete }) => 
                                             <span className="text-sm font-semibold text-white">
                                                 {phase.name}
                                             </span>
-                                            <span className="text-xs text-gray-600 bg-gray-800 px-2 py-0.5 rounded-full">
+                                            <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">
                                                 {phase.weeks}
                                             </span>
                                         </div>
@@ -314,7 +314,7 @@ const ProgramPresentationScreen: React.FC<Props> = ({ program, onComplete }) => 
 
                     {/* ── MESSAGE FINAL ─────────────────────────── */}
                     <SlideSection delay={1.2} className="text-center mb-4">
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-gray-500">
                             Fais défiler pour continuer ↓
                         </p>
                     </SlideSection>
@@ -351,7 +351,7 @@ const ProgramPresentationScreen: React.FC<Props> = ({ program, onComplete }) => 
                                     ? '⚡ Lancer mon programme intensif'
                                     : '🏆 Accéder à mon programme'}
                             </motion.button>
-                            <p className="text-center text-xs text-gray-600 mt-2">
+                            <p className="text-center text-xs text-gray-500 mt-2">
                                 {isConditioning
                                     ? 'Semaine 1 gratuite · Aucune CB requise'
                                     : 'Personnalisé pour toi · Basé sur ta VMA'}
