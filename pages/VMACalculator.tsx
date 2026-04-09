@@ -27,7 +27,7 @@ const VMACalculator: React.FC = () => {
                 if (demiCooperDist > 0) vma = demiCooperDist / 100;
                 break;
             case 'vameval':
-                // VMA = 8 + 0.5 * (Palier - 1)
+                // VAMEVAL: Palier 1 = 8.5 km/h, +0.5 par palier
                 if (vamevalStage > 0) vma = 8 + 0.5 * vamevalStage;
                 break;
             case 'raceTime':

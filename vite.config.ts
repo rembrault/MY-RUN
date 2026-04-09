@@ -22,7 +22,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon-192.svg', 'icon-512.svg', 'apple-touch-icon.svg', 'sw-custom.js'],
+      includeAssets: ['favicon-32.png', 'favicon-192.png', 'logo-myrun.png', 'sw-custom.js'],
       devOptions: {
         enabled: true
       },
@@ -40,19 +40,19 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/icon-192.svg',
+            src: '/favicon-192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png'
           },
           {
-            src: '/icon-512.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml'
+            src: '/logo-myrun.png',
+            sizes: '800x609',
+            type: 'image/png'
           },
           {
-            src: '/icon-512.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
+            src: '/favicon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]
