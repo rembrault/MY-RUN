@@ -71,7 +71,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
         <Layout showBottomNav={!isOnboarding}>
             <header className="flex items-center mb-6">
                 {!isOnboarding && (
-                    <button onClick={() => setPage('profile')} className="p-2 text-gray-400 hover:text-white">
+                    <button onClick={() => setPage('profile')} className="p-2 text-gray-400 hover:text-white" aria-label="Retour">
                         <ArrowLeft size={24} />
                     </button>
                 )}
@@ -117,11 +117,11 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
                 
                 <InputCard icon={<Scale size={18} className="text-white" />} label="Poids (kg)">
                     <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => decrement('weight')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                        <button type="button" onClick={() => decrement('weight')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0" aria-label="Diminuer le poids">
                             <Minus size={14} />
                         </button>
                         <input type="number" name="weight" value={formData.weight || ''} onChange={handleNumberChange} className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-500 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                        <button type="button" onClick={() => increment('weight')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                        <button type="button" onClick={() => increment('weight')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0" aria-label="Augmenter le poids">
                             <Plus size={14} />
                         </button>
                     </div>
@@ -129,11 +129,11 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
 
                 <InputCard icon={<Ruler size={18} className="text-white" />} label="Taille (cm)">
                     <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => decrement('height')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                        <button type="button" onClick={() => decrement('height')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0" aria-label="Diminuer la taille">
                             <Minus size={14} />
                         </button>
                         <input type="number" name="height" value={formData.height || ''} onChange={handleNumberChange} className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-500 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                        <button type="button" onClick={() => increment('height')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                        <button type="button" onClick={() => increment('height')} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0" aria-label="Augmenter la taille">
                             <Plus size={14} />
                         </button>
                     </div>
@@ -145,11 +145,11 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
 
                  <InputCard icon={<Gauge size={18} className="text-white" />} label="VMA (km/h)">
                     <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => decrement('vma', 0.5)} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                        <button type="button" onClick={() => decrement('vma', 0.5)} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0" aria-label="Diminuer la VMA">
                             <Minus size={14} />
                         </button>
                         <input type="number" step="0.1" name="vma" value={formData.vma || ''} onChange={handleNumberChange} placeholder="Ex: 12.5" className="flex-1 bg-white/5 rounded-lg p-1.5 text-white text-center border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-gray-500 font-medium min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                        <button type="button" onClick={() => increment('vma', 0.5)} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0">
+                        <button type="button" onClick={() => increment('vma', 0.5)} className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-200 transition-colors shrink-0" aria-label="Augmenter la VMA">
                             <Plus size={14} />
                         </button>
                     </div>

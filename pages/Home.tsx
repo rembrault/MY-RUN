@@ -61,6 +61,7 @@ const TutorialBanner: React.FC<{ variant: 'welcome' | 'dashboard' }> = ({ varian
           <button
             onClick={handleDismiss}
             className="absolute top-3 right-3 p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Fermer"
           >
             <X size={14} />
           </button>

@@ -112,7 +112,7 @@ const VMACalculator: React.FC = () => {
         <>
         <Layout>
             <header className="flex items-center mb-6 relative">
-                <button onClick={() => setPage('profile')} className="absolute left-0 p-2 text-gray-400 hover:text-white">
+                <button onClick={() => setPage('profile')} className="absolute left-0 p-2 text-gray-400 hover:text-white" aria-label="Retour">
                     <ArrowLeft size={24} />
                 </button>
                 <h1 className="text-xl font-bold text-center flex-1 text-white">Calculateur de VMA</h1>

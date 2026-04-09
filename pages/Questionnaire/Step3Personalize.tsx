@@ -98,6 +98,41 @@ const Step3Personalize: React.FC<Step3Props> = ({
     const [searchResults, setSearchResults] = useState<Race[]>([]);
     const [isSearching, setIsSearching]     = useState(false);
     const [showResults, setShowResults]     = useState(false);
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+    const validateAndSubmit = () => {
+        const errors: string[] = [];
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        if (formData.raceDate <= now) {
+            errors.push('La date de course doit être dans le futur');
+        }
+        if (formData.startDate > formData.raceDate) {
+            errors.push('La date de début doit être avant la date de course');
+        }
+        if (!formData.vma || formData.vma < 5 || formData.vma > 30) {
+            errors.push('Veuillez renseigner une VMA valide (entre 5 et 30 km/h)');
+        }
+        if (!formData.trainingDays || formData.trainingDays.length < 2) {
+            errors.push('Sélectionnez au moins 2 jours d\'entraînement');
+        }
+        if (!formData.timeObjective) {
+            errors.push('Choisissez un objectif de temps');
+        }
+
+        // Vérifier que le plan a au moins 4 semaines
+        const diffMs = formData.raceDate.getTime() - formData.startDate.getTime();
+        const diffWeeks = diffMs / (1000 * 60 * 60 * 24 * 7);
+        if (diffWeeks < 4) {
+            errors.push('Le plan doit durer au moins 4 semaines');
+        }
+
+        setValidationErrors(errors);
+        if (errors.length === 0) {
+            onSubmit();
+        }
+    };
 
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -443,6 +478,26 @@ const Step3Personalize: React.FC<Step3Props> = ({
 
             </div>
 
+            {/* ── Erreurs de validation ── */}
+            <AnimatePresence>
+                {validationErrors.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="rounded-xl p-3 mt-1"
+                        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+                    >
+                        {validationErrors.map((err, i) => (
+                            <p key={i} className="text-red-400 text-xs font-semibold flex items-center gap-2">
+                                <span className="w-1 h-1 rounded-full bg-red-400 flex-shrink-0" />
+                                {err}
+                            </p>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* ── CTA ── */}
             <motion.div
                 className="pt-5 pb-1"
@@ -451,7 +506,7 @@ const Step3Personalize: React.FC<Step3Props> = ({
                 transition={{ delay: 0.5 }}
             >
                 <motion.button
-                    onClick={onSubmit}
+                    onClick={validateAndSubmit}
                     whileTap={{ scale: 0.97 }}
                     whileHover={{ scale: 1.01 }}
                     className="w-full py-4 rounded-2xl font-black text-black text-sm tracking-wide relative overflow-hidden"

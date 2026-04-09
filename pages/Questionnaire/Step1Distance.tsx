@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, TrendingUp, Activity, Trophy } from 'lucide-react';
 import { Distance } from '../../types';
 
@@ -53,8 +53,19 @@ const distances = [
 ];
 
 const Step1Distance: React.FC<Props> = ({ formData, onSelect, nextStep }) => {
+  const [showError, setShowError] = useState(false);
+
   const handleSelect = (value: Distance) => {
     onSelect('distance', value);
+    setShowError(false);
+  };
+
+  const handleNext = () => {
+    if (!formData.distance) {
+      setShowError(true);
+      return;
+    }
+    nextStep();
   };
 
   const containerVariants = {
@@ -192,6 +203,20 @@ const Step1Distance: React.FC<Props> = ({ formData, onSelect, nextStep }) => {
         })}
       </motion.div>
 
+      {/* Erreur de validation */}
+      <AnimatePresence>
+        {showError && (
+          <motion.p
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-center text-red-400 text-xs font-semibold mt-2"
+          >
+            Veuillez sélectionner une distance pour continuer
+          </motion.p>
+        )}
+      </AnimatePresence>
+
       {/* CTA */}
       <motion.div
         className="pt-6 pb-2"
@@ -200,13 +225,15 @@ const Step1Distance: React.FC<Props> = ({ formData, onSelect, nextStep }) => {
         transition={{ delay: 0.4 }}
       >
         <motion.button
-          onClick={nextStep}
+          onClick={handleNext}
           whileTap={{ scale: 0.97 }}
           whileHover={{ scale: 1.01 }}
           className="w-full py-4 rounded-2xl font-bold text-sm tracking-wide text-black relative overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #00ff87, #00d4ff)',
-            boxShadow: '0 0 30px rgba(0,255,135,0.3)',
+            background: formData.distance
+              ? 'linear-gradient(135deg, #00ff87, #00d4ff)'
+              : 'linear-gradient(135deg, rgba(0,255,135,0.3), rgba(0,212,255,0.3))',
+            boxShadow: formData.distance ? '0 0 30px rgba(0,255,135,0.3)' : 'none',
           }}
         >
           <motion.div

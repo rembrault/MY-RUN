@@ -68,7 +68,7 @@ const Profile: React.FC = () => {
                             accept="image/*"
                             className="hidden"
                         />
-                        <button onClick={handleAvatarChangeClick} className="absolute -bottom-1 -right-1 bg-gray-700 p-2 rounded-full text-white hover:bg-gray-600">
+                        <button onClick={handleAvatarChangeClick} className="absolute -bottom-1 -right-1 bg-gray-700 p-2 rounded-full text-white hover:bg-gray-600" aria-label="Changer la photo de profil">
                             <Camera size={16} />
                         </button>
                     </div>
@@ -103,10 +103,11 @@ const Profile: React.FC = () => {
                                 <p className="font-bold text-white">{program.raceName}</p>
                                 <p className="text-sm text-gray-400">{program.distance} • {program.totalWeeks} semaines</p>
                             </div>
-                            <button 
-                                onClick={confirmDelete} 
-                                className="text-red-500 p-2 hover:bg-red-500/10 rounded-full cursor-pointer" 
+                            <button
+                                onClick={confirmDelete}
+                                className="text-red-500 p-2 hover:bg-red-500/10 rounded-full cursor-pointer"
                                 title="Supprimer le programme"
+                                aria-label="Supprimer le programme"
                             >
                                 <Trash2 size={24} />
                             </button>
@@ -139,7 +140,7 @@ const Profile: React.FC = () => {
                                     <p className="font-bold text-white">{p.raceName}</p>
                                     <p className="text-sm text-gray-400">{p.distance} • {new Date(p.raceDate).toLocaleDateString('fr-FR')}</p>
                                 </div>
-                                <button onClick={() => handleViewHistory(p)} className="text-cyan-400 p-2 hover:bg-cyan-500/10 rounded-full">
+                                <button onClick={() => handleViewHistory(p)} className="text-cyan-400 p-2 hover:bg-cyan-500/10 rounded-full" aria-label="Voir le programme">
                                     <Eye size={20} />
                                 </button>
                             </div>

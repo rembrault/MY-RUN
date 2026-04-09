@@ -168,15 +168,16 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
         <>
         <Layout showBottomNav={false}>
             <header className="text-center mb-6 relative">
-                 <button onClick={() => setPage('home')} className="absolute left-0 p-1 text-gray-400 hover:text-white">
+                 <button onClick={() => setPage('home')} className="absolute left-0 p-1 text-gray-400 hover:text-white" aria-label="Retour">
                     <ArrowLeft size={24} />
                 </button>
                 <h1 className="text-xl font-bold text-white">Semaine {week.weekNumber} / {program.totalWeeks}</h1>
                 
-                <button 
+                <button
                     onClick={handleExportICS}
                     className="absolute right-0 top-0 p-2 text-cyan-400 hover:text-white bg-white/5 rounded-full border border-white/10"
                     title="Ajouter au calendrier"
+                    aria-label="Exporter au calendrier"
                 >
                     <Calendar size={20} />
                 </button>
@@ -406,7 +407,7 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
         return (
             <div {...commonProps} >
                 {/* Drag Handle */}
-                <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 cursor-grab active:cursor-grabbing hover:text-white">
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 cursor-grab active:cursor-grabbing hover:text-white" role="img" aria-label="Poignée de déplacement">
                     <GripVertical size={20} />
                 </div>
                 <div className="flex justify-between items-center pl-8">
@@ -432,7 +433,7 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
     return (
         <div {...commonProps} className={`${commonProps.className} ${session.completed ? 'opacity-70 grayscale-[0.5]' : ''}`}>
            {/* Drag Handle */}
-           <div className="absolute left-2 top-6 text-gray-400 hover:text-white cursor-grab active:cursor-grabbing">
+           <div className="absolute left-2 top-6 text-gray-400 hover:text-white cursor-grab active:cursor-grabbing" role="img" aria-label="Poignée de déplacement">
                 <GripVertical size={20} />
             </div>
 
@@ -457,9 +458,10 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onCheckClick, onDrag
               </div>
             </div>
             
-            <motion.button 
+            <motion.button
                 whileTap={{ scale: 0.8 }}
-                onClick={onCheckClick} 
+                onClick={onCheckClick}
+                aria-label={session.completed ? "Marquer comme non terminée" : "Marquer comme terminée"}
                 className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 ${session.completed ? 'bg-green-500 border-green-500 scale-110' : 'border-gray-400 hover:border-white'}`}
             >
                 {session.completed && <CheckCircle size={16} className="text-black" />}
