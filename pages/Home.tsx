@@ -6,23 +6,12 @@ import Layout from '../components/Layout';
 import NotificationBanner from '../components/NotificationBanner';
 import { scheduleNextReminder, isReminderEnabled } from '../services/notifications';
 
-// ── Clé localStorage pour mémoriser la fermeture ───────────
-const TUTORIAL_DISMISSED_KEY = 'myrun_tutorial_dismissed';
-
-// ── Bannière tutoriel ──────────────────────────────────────
+// ── Bannière tutoriel (toujours visible, masquable pour la session) ──
 const TutorialBanner: React.FC<{ variant: 'welcome' | 'dashboard' }> = ({ variant }) => {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
   const { setPage } = useAppContext();
 
-  useEffect(() => {
-    const dismissed = localStorage.getItem(TUTORIAL_DISMISSED_KEY);
-    if (!dismissed) {
-      setShow(true);
-    }
-  }, []);
-
   const handleDismiss = () => {
-    localStorage.setItem(TUTORIAL_DISMISSED_KEY, 'true');
     setShow(false);
   };
 
@@ -111,7 +100,7 @@ const TutorialBanner: React.FC<{ variant: 'welcome' | 'dashboard' }> = ({ varian
               onClick={handleDismiss}
               className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
             >
-              Ne plus afficher
+              Masquer
             </button>
             {variant === 'dashboard' && (
               <button
