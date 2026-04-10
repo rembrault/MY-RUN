@@ -106,6 +106,10 @@ export interface AppContextType {
     viewedProgram: Program | null;
     authUser: any | null;
     setPage: (page: Page) => void;
+    previousPage: Page | null;
+    setPreviousPage: (page: Page | null) => void;
+    questionnaireStep: number;
+    setQuestionnaireStep: (step: number) => void;
     updateUser: (userData: Partial<User>) => Promise<void>;
     createProgram: (settings: Omit<Program, 'id' | 'weeks' | 'totalWeeks'> & { vma?: number, raceInfo?: Program['raceInfo'] }) => Promise<void>;
     deleteProgram: () => Promise<void>;

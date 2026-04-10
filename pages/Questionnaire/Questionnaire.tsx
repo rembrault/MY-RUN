@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, LoaderCircle, Check } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { Distance, Level, Program } from '../../types';
@@ -16,8 +16,8 @@ import {
 } from '../../services/planGenerator';
 
 const Questionnaire: React.FC = () => {
-    const { saveProgram, setPage, user } = useAppContext();
-    const [step, setStep] = useState(1);
+    const { saveProgram, setPage, setPreviousPage, questionnaireStep, setQuestionnaireStep, user } = useAppContext();
+    const [step, setStep] = useState(questionnaireStep);
     const [isCreating, setIsCreating] = useState(false);
 
     // ── États pour le conseiller de timing ──────────────────────
@@ -29,22 +29,42 @@ const Questionnaire: React.FC = () => {
     const [showPresentation, setShowPresentation] = useState(false);
     const [generatedProgram, setGeneratedProgram] = useState<Program | null>(null);
 
-    const [formData, setFormData] = useState({
-        distance: Distance.FiveK,
-        level: Level.Beginner,
-        raceName: '',
-        raceDate: new Date(),
-        startDate: new Date(),
-        trainingDays: [] as string[],
-        sessionsPerWeek: 3,
-        timeObjective: 'Finir',
-        currentMileage: 20,
-        vma: user.vma || 15,
-        raceInfo: undefined as Program['raceInfo'] | undefined,
+    const [formData, setFormData] = useState(() => {
+        // Restaurer les données du formulaire si on revient du calculateur VMA
+        const saved = sessionStorage.getItem('myrun_questionnaire_data');
+        if (saved && questionnaireStep > 1) {
+            try {
+                const parsed = JSON.parse(saved);
+                return {
+                    ...parsed,
+                    raceDate: new Date(parsed.raceDate),
+                    startDate: new Date(parsed.startDate),
+                    vma: user.vma || parsed.vma || 15,
+                };
+            } catch { /* ignore */ }
+        }
+        return {
+            distance: Distance.FiveK,
+            level: Level.Beginner,
+            raceName: '',
+            raceDate: new Date(),
+            startDate: new Date(),
+            trainingDays: [] as string[],
+            sessionsPerWeek: 3,
+            timeObjective: 'Finir',
+            currentMileage: 20,
+            vma: user.vma || 15,
+            raceInfo: undefined as Program['raceInfo'] | undefined,
+        };
     });
 
-    const nextStep = () => setStep(prev => prev + 1);
-    const prevStep = () => setStep(prev => prev - 1);
+    // Sauvegarder le formulaire dans sessionStorage à chaque changement
+    useEffect(() => {
+        sessionStorage.setItem('myrun_questionnaire_data', JSON.stringify(formData));
+    }, [formData]);
+
+    const nextStep = () => setStep(prev => { const next = prev + 1; setQuestionnaireStep(next); return next; });
+    const prevStep = () => setStep(prev => { const next = prev - 1; setQuestionnaireStep(next); return next; });
 
     const handleChange = (input: keyof typeof formData) => (
         e: React.ChangeEvent<HTMLInputElement> | { value: any }
@@ -175,6 +195,8 @@ const Questionnaire: React.FC = () => {
                 onComplete={() => {
                     setShowPresentation(false);
                     setGeneratedProgram(null);
+                    setQuestionnaireStep(1);
+                    sessionStorage.removeItem('myrun_questionnaire_data');
                     setPage('home');
                 }}
             />
@@ -189,7 +211,7 @@ const Questionnaire: React.FC = () => {
             <div className="relative w-full max-w-lg md:max-w-2xl min-h-[85vh] md:min-h-0 flex flex-col" style={{ background: "rgba(10,10,18,0.6)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "1.5rem", backdropFilter: "blur(12px)", padding: "0" }}>
                 <header className="flex items-center p-4 z-10">
                     <button
-                        onClick={step === 1 ? () => setPage('welcome') : prevStep}
+                        onClick={step === 1 ? () => { setQuestionnaireStep(1); sessionStorage.removeItem('myrun_questionnaire_data'); setPage('welcome'); } : prevStep}
                         className="p-2 text-gray-400 hover:text-white"
                     >
                         <ArrowLeft size={24} />
@@ -243,6 +265,7 @@ const Questionnaire: React.FC = () => {
                             onSelect={handleSelect}
                             onSubmit={handleSubmit}
                             setPage={setPage}
+                            setPreviousPage={setPreviousPage}
                         />
                     )}
                 </div>

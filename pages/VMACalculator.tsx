@@ -9,7 +9,7 @@ import NeonButton from '../components/NeonButton';
 type TestType = 'demiCooper' | 'vameval' | 'raceTime';
 
 const VMACalculator: React.FC = () => {
-    const { user, updateUser, setPage } = useAppContext();
+    const { user, updateUser, setPage, previousPage, setPreviousPage } = useAppContext();
     const [testType, setTestType] = useState<TestType>('demiCooper');
     const [result, setResult] = useState<number | null>(null);
 
@@ -112,7 +112,7 @@ const VMACalculator: React.FC = () => {
         <>
         <Layout>
             <header className="flex items-center mb-6 relative">
-                <button onClick={() => setPage('profile')} className="absolute left-0 p-2 text-gray-400 hover:text-white" aria-label="Retour">
+                <button onClick={() => { const dest = previousPage || 'profile'; setPreviousPage(null); setPage(dest); }} className="absolute left-0 p-2 text-gray-400 hover:text-white" aria-label="Retour">
                     <ArrowLeft size={24} />
                 </button>
                 <h1 className="text-xl font-bold text-center flex-1 text-white">Calculateur de VMA</h1>
@@ -158,13 +158,13 @@ const VMACalculator: React.FC = () => {
 
         <Modal
             open={showSavedModal}
-            onClose={() => { setShowSavedModal(false); setPage('profile'); }}
+            onClose={() => { setShowSavedModal(false); const dest = previousPage || 'profile'; setPreviousPage(null); setPage(dest); }}
             variant="success"
             title="VMA enregistrée"
-            message={`Votre VMA de ${result} km/h a bien été enregistrée sur votre profil.`}
-            confirmLabel="OK"
+            message={`Votre VMA de ${result} km/h a bien été enregistrée.${previousPage === 'new-program' ? ' Vous allez revenir au questionnaire.' : ''}`}
+            confirmLabel={previousPage === 'new-program' ? 'Revenir au questionnaire' : 'OK'}
             singleAction
-            onConfirm={() => setPage('profile')}
+            onConfirm={() => { const dest = previousPage || 'profile'; setPreviousPage(null); setPage(dest); }}
         />
         </>
     );

@@ -138,6 +138,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
 
     const [page, setPage] = useState<Page>(program ? 'home' : 'welcome');
+    const [previousPage, setPreviousPage] = useState<Page | null>(null);
+    const [questionnaireStep, setQuestionnaireStep] = useState<number>(1);
     const [viewedProgram, setViewedProgram] = useState<Program | null>(null);
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -503,6 +505,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         programHistory,
         viewedProgram,
         setPage,
+        previousPage,
+        setPreviousPage,
+        questionnaireStep,
+        setQuestionnaireStep,
         updateUser,
         createProgram,
         saveProgram,

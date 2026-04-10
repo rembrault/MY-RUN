@@ -21,6 +21,7 @@ interface Step3Props {
     onSelect: (field: string, value: any) => void;
     onSubmit: () => void;
     setPage: (page: Page) => void;
+    setPreviousPage: (page: Page | null) => void;
 }
 
 const timeObjectives: { [key in Distance]: string[] } = {
@@ -91,7 +92,7 @@ const SectionLabel: React.FC<{ icon: React.ReactNode; label: string; color?: str
 
 // ────────────────────────────────────────────────────────────
 const Step3Personalize: React.FC<Step3Props> = ({
-    formData, onChange, onSelect, onSubmit, setPage
+    formData, onChange, onSelect, onSubmit, setPage, setPreviousPage
 }) => {
     const today = new Date().toISOString().split('T')[0];
     const [searchQuery, setSearchQuery]     = useState('');
@@ -424,7 +425,7 @@ const Step3Personalize: React.FC<Step3Props> = ({
                             </div>
                         </div>
                         <motion.button
-                            onClick={() => setPage('vma-calculator')}
+                            onClick={() => { setPreviousPage('new-program'); setPage('vma-calculator'); }}
                             whileTap={{ scale: 0.95 }}
                             whileHover={{ scale: 1.03 }}
                             className="px-4 py-2 rounded-xl text-xs font-bold"
