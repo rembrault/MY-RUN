@@ -1,26 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { AppProvider, useAppContext } from './context/AppContext';
-import Auth from './pages/Auth';
-import Welcome from './pages/Welcome';
-import Questionnaire from './pages/Questionnaire/Questionnaire';
-import Home from './pages/Home';
-import Profile from './pages/Profile';
-import Payment from './pages/Payment';
-import WeekDetail from './pages/WeekDetail';
-import EditProfile from './pages/EditProfile';
-import CalendarExport from './pages/CalendarExport';
-import VMACalculator from './pages/VMACalculator';
-import ProgramView from './pages/ProgramView';
-import MyPrograms from './pages/MyPrograms';
-import CoachIA from './pages/CoachIA';
-import Statistics from './pages/Statistics';
 import PageTransition from './components/PageTransition';
 import SplashScreen from './components/SplashScreen';
 import ErrorBoundary from './components/ErrorBoundary';
+import InstallBanner from './components/InstallBanner';
+
+// ── Pages chargées immédiatement (critiques au démarrage) ──
+import Auth from './pages/Auth';
+import Home from './pages/Home';
+
+// ── Pages lazy-loaded (chargées à la demande) ──────────────
+const Welcome = lazy(() => import('./pages/Welcome'));
+const Questionnaire = lazy(() => import('./pages/Questionnaire/Questionnaire'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Payment = lazy(() => import('./pages/Payment'));
+const WeekDetail = lazy(() => import('./pages/WeekDetail'));
+const EditProfile = lazy(() => import('./pages/EditProfile'));
+const CalendarExport = lazy(() => import('./pages/CalendarExport'));
+const VMACalculator = lazy(() => import('./pages/VMACalculator'));
+const ProgramView = lazy(() => import('./pages/ProgramView'));
+const MyPrograms = lazy(() => import('./pages/MyPrograms'));
+const CoachIA = lazy(() => import('./pages/CoachIA'));
+const Statistics = lazy(() => import('./pages/Statistics'));
+
+// ── Fallback de chargement ─────────────────────────────────
+const LazyFallback = () => (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+        <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-transparent border-t-green-400 border-r-cyan-400 animate-spin" />
+            <span className="text-xs text-gray-500 tracking-wider">Chargement...</span>
+        </div>
+    </div>
+);
 
 const PageRenderer: React.FC = () => {
-    const { page, program, hasOnboarded, isAuthenticated, isLoading } = useAppContext();
+    const { page, setPage, program, hasOnboarded, isAuthenticated, isLoading } = useAppContext();
     const [showSplash, setShowSplash] = useState(true);
     const [minTimePassed, setMinTimePassed] = useState(false);
 
@@ -95,11 +110,13 @@ const PageRenderer: React.FC = () => {
 
     return (
         <ErrorBoundary fallbackPage={() => setPage('home')}>
-            <AnimatePresence mode="wait">
-                <PageTransition key={hasOnboarded ? page : 'onboarding'}>
-                    {getComponent()}
-                </PageTransition>
-            </AnimatePresence>
+            <Suspense fallback={<LazyFallback />}>
+                <AnimatePresence mode="wait">
+                    <PageTransition key={hasOnboarded ? page : 'onboarding'}>
+                        {getComponent()}
+                    </PageTransition>
+                </AnimatePresence>
+            </Suspense>
         </ErrorBoundary>
     );
 };
@@ -108,6 +125,7 @@ const App: React.FC = () => (
     <ErrorBoundary>
         <AppProvider>
             <PageRenderer />
+            <InstallBanner />
         </AppProvider>
     </ErrorBoundary>
 );
