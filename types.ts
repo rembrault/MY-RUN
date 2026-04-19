@@ -106,6 +106,9 @@ export interface AppContextType {
     viewedProgram: Program | null;
     authUser: any | null;
     setPage: (page: Page) => void;
+    navigateTo: (page: Page) => void;
+    navigateBack: () => void;
+    transitionDirection: 'forward' | 'back' | 'tab';
     previousPage: Page | null;
     setPreviousPage: (page: Page | null) => void;
     questionnaireStep: number;

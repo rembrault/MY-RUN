@@ -35,7 +35,7 @@ const LazyFallback = () => (
 );
 
 const PageRenderer: React.FC = () => {
-    const { page, setPage, program, hasOnboarded, isAuthenticated, isLoading } = useAppContext();
+    const { page, setPage, program, hasOnboarded, isAuthenticated, isLoading, transitionDirection } = useAppContext();
     const [showSplash, setShowSplash] = useState(true);
     const [minTimePassed, setMinTimePassed] = useState(false);
 
@@ -112,7 +112,7 @@ const PageRenderer: React.FC = () => {
         <ErrorBoundary fallbackPage={() => setPage('home')}>
             <Suspense fallback={<LazyFallback />}>
                 <AnimatePresence mode="wait">
-                    <PageTransition key={hasOnboarded ? page : 'onboarding'}>
+                    <PageTransition key={hasOnboarded ? page : 'onboarding'} direction={transitionDirection}>
                         {getComponent()}
                     </PageTransition>
                 </AnimatePresence>

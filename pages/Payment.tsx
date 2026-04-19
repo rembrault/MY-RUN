@@ -6,7 +6,7 @@ import NeonButton from '../components/NeonButton';
 import { Distance } from '../types';
 
 const Payment: React.FC = () => {
-    const { program, setPage, authUser } = useAppContext();
+    const { program, setPage, navigateBack, authUser } = useAppContext();
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -67,7 +67,7 @@ const Payment: React.FC = () => {
 
             {/* ── Header ── */}
             <header className="flex items-center mb-6">
-                <button onClick={() => setPage('home')} className="p-2 text-gray-400 hover:text-white">
+                <button onClick={() => navigateBack()} className="p-2 text-gray-400 hover:text-white">
                     <ArrowLeft size={24} />
                 </button>
                 <h1 className="text-xl font-bold text-center flex-1 text-white">Débloquer le programme</h1>

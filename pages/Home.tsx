@@ -9,7 +9,7 @@ import { scheduleNextReminder, isReminderEnabled } from '../services/notificatio
 // ── Bannière tutoriel (toujours visible, masquable pour la session) ──
 const TutorialBanner: React.FC<{ variant: 'welcome' | 'dashboard' }> = ({ variant }) => {
   const [show, setShow] = useState(true);
-  const { setPage } = useAppContext();
+  const { setPage, navigateTo } = useAppContext();
 
   const handleDismiss = () => {
     setShow(false);
@@ -104,7 +104,7 @@ const TutorialBanner: React.FC<{ variant: 'welcome' | 'dashboard' }> = ({ varian
             </button>
             {variant === 'dashboard' && (
               <button
-                onClick={() => { setPage('statistics'); handleDismiss(); }}
+                onClick={() => { navigateTo('statistics'); handleDismiss(); }}
                 className="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
               >
                 Voir mes stats <ChevronRight size={12} />
@@ -247,7 +247,7 @@ const FeaturePill: React.FC<{
 );
 
 const WelcomeView: React.FC = () => {
-  const { setPage, user } = useAppContext();
+  const { setPage, navigateTo, user } = useAppContext();
 
   return (
     <Layout>
@@ -357,7 +357,7 @@ const WelcomeView: React.FC = () => {
 
         {/* CTA */}
         <motion.button
-          onClick={() => setPage('new-program')}
+          onClick={() => navigateTo('new-program')}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.95 }}
@@ -396,7 +396,7 @@ const WelcomeView: React.FC = () => {
 // TABLEAU DE BORD (avec programme)
 // ─────────────────────────────────────────────────────────────
 const DashboardView: React.FC = () => {
-  const { program, user, setPage } = useAppContext();
+  const { program, user, setPage, navigateTo } = useAppContext();
 
   // Planifier les rappels de séance si activés
   useEffect(() => {
@@ -453,7 +453,7 @@ const DashboardView: React.FC = () => {
         <GlassCard
           delay={0.1}
           glow="rgba(0,212,255,0.1)"
-          onClick={() => setPage('my-programs')}
+          onClick={() => navigateTo('my-programs')}
         >
           {/* Gradient top */}
           <div
@@ -520,7 +520,7 @@ const DashboardView: React.FC = () => {
         {nextSession && (
           <GlassCard
             delay={0.2}
-            onClick={() => currentWeekIndex >= 0 && setPage(`week-${currentWeekIndex}` as any)}
+            onClick={() => currentWeekIndex >= 0 && navigateTo(`week-${currentWeekIndex}` as any)}
           >
             <div className="p-5">
               <p

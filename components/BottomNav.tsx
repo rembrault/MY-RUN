@@ -4,12 +4,12 @@ import { useAppContext } from '../context/AppContext';
 import { Page } from '../types';
 
 const BottomNav: React.FC = () => {
-    const { page, setPage, program } = useAppContext();
+    const { page, navigateTo, program } = useAppContext();
 
     const navItems = [
         { id: 'home',           icon: Home,      label: 'Accueil' },
         { id: 'my-programs',    icon: ScrollText, label: 'Progr.' },
-        { id: 'coach-ia',       icon: Bot,        label: 'Coach IA' }, // ← NOUVEAU
+        { id: 'coach-ia',       icon: Bot,        label: 'Coach IA' },
         { id: 'statistics',     icon: BarChart3,   label: 'Stats' },
         { id: 'vma-calculator', icon: Gauge,      label: 'VMA' },
         { id: 'profile',        icon: User,       label: 'Profil' },
@@ -17,9 +17,9 @@ const BottomNav: React.FC = () => {
 
     const handleNavClick = (targetPage: Page) => {
         if (!program && targetPage === 'home') {
-            setPage('welcome');
+            navigateTo('welcome');
         } else {
-            setPage(targetPage);
+            navigateTo(targetPage);
         }
     };
 

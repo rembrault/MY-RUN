@@ -139,8 +139,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const [page, setPage] = useState<Page>(program ? 'home' : 'welcome');
     const [previousPage, setPreviousPage] = useState<Page | null>(null);
+    const [transitionDirection, setTransitionDirection] = useState<'forward' | 'back' | 'tab'>('forward');
+    const [pageHistory, setPageHistory] = useState<Page[]>([program ? 'home' : 'welcome']);
     const [questionnaireStep, setQuestionnaireStep] = useState<number>(1);
     const [viewedProgram, setViewedProgram] = useState<Program | null>(null);
+
+    // Pages accessibles depuis la barre d'onglets
+    const tabPages = new Set<string>(['home', 'my-programs', 'coach-ia', 'statistics', 'vma-calculator', 'profile']);
+
+    const navigateTo = (target: Page) => {
+        if (target === page) return;
+        if (tabPages.has(target) && tabPages.has(page)) {
+            setTransitionDirection('tab');
+        } else {
+            setTransitionDirection('forward');
+        }
+        setPageHistory(prev => [...prev, target]);
+        setPage(target);
+    };
+
+    const navigateBack = () => {
+        setTransitionDirection('back');
+        setPageHistory(prev => {
+            if (prev.length <= 1) return prev;
+            const newHistory = prev.slice(0, -1);
+            setPage(newHistory[newHistory.length - 1]);
+            return newHistory;
+        });
+    };
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // LISTENER AUTH — Supabase détecte connexion → charge données
@@ -505,6 +531,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         programHistory,
         viewedProgram,
         setPage,
+        navigateTo,
+        navigateBack,
+        transitionDirection,
         previousPage,
         setPreviousPage,
         questionnaireStep,

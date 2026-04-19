@@ -31,7 +31,7 @@ const getBlockIcon = (type: WorkoutBlock['type']) => {
 }
 
 const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
-    const { program, setPage, updateProgram, adaptProgramIntensity } = useAppContext();
+    const { program, setPage, navigateBack, updateProgram, adaptProgramIntensity } = useAppContext();
     const [dragOverId, setDragOverId] = useState<string | null>(null);
     const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
     const [showAdaptationModal, setShowAdaptationModal] = useState(false);
@@ -168,7 +168,7 @@ const WeekDetail: React.FC<{ weekIndex: number }> = ({ weekIndex }) => {
         <>
         <Layout showBottomNav={false}>
             <header className="text-center mb-6 relative">
-                 <button onClick={() => setPage('home')} className="absolute left-0 p-1 text-gray-400 hover:text-white" aria-label="Retour">
+                 <button onClick={() => navigateBack()} className="absolute left-0 p-1 text-gray-400 hover:text-white" aria-label="Retour">
                     <ArrowLeft size={24} />
                 </button>
                 <h1 className="text-xl font-bold text-white">Semaine {week.weekNumber} / {program.totalWeeks}</h1>

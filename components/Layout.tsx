@@ -69,7 +69,7 @@ const AnimatedLogo: React.FC = () => {
 
 // ── Navigation latérale desktop ──────────────────────────────
 const DesktopNav: React.FC = () => {
-  const { page, setPage, program } = useAppContext();
+  const { page, navigateTo, program } = useAppContext();
 
   const navItems = [
     { id: 'home',           icon: Home,       label: 'Tableau de bord', color: 'cyan' },
@@ -81,8 +81,8 @@ const DesktopNav: React.FC = () => {
   ];
 
   const handleNav = (targetPage: Page) => {
-    if (!program && targetPage === 'home') setPage('welcome');
-    else setPage(targetPage);
+    if (!program && targetPage === 'home') navigateTo('welcome');
+    else navigateTo(targetPage);
   };
 
   const activePage = page === 'welcome' ? 'home' : page;

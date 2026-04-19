@@ -12,7 +12,7 @@ interface EditProfileProps {
 }
 
 const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
-    const { user, updateUser, setPage, completeOnboarding } = useAppContext();
+    const { user, updateUser, setPage, navigateBack, completeOnboarding } = useAppContext();
     const [formData, setFormData] = useState<User>(user);
     const [modalInfo, setModalInfo] = useState<{ open: boolean; title: string; message: string; variant: 'success' | 'info' | 'danger' }>({ open: false, title: '', message: '', variant: 'info' });
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +71,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ isOnboarding = false }) => {
         <Layout showBottomNav={!isOnboarding}>
             <header className="flex items-center mb-6">
                 {!isOnboarding && (
-                    <button onClick={() => setPage('profile')} className="p-2 text-gray-400 hover:text-white" aria-label="Retour">
+                    <button onClick={() => navigateBack()} className="p-2 text-gray-400 hover:text-white" aria-label="Retour">
                         <ArrowLeft size={24} />
                     </button>
                 )}
